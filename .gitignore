@@ -1,3 +1,6 @@
+# Environment variables
+.env
+
 # Miscellaneous
 *.class
 *.log
@@ -43,3 +46,23 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android signing keys (NEVER commit these)
+*.jks
+*.keystore
+key.properties
+android/key.properties
+
+# iOS signing (NEVER commit these)
+*.p12
+*.mobileprovision
+ios/Runner/GoogleService-Info.plist
+android/app/google-services.json
+
+# Local environment files
+.env.*
+!.env.example
+
+# Podfile.lock can be committed but regenerated
+ios/Podfile.lock
+macos/Podfile.lock
