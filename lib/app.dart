@@ -48,10 +48,28 @@ class _SusNightAppState extends ConsumerState<SusNightApp> {
 
   Widget _buildMainApp(Locale? locale) {
     return ScreenUtilInit(
+      // Use phone design size - on tablets, screenutil will detect larger screen
+      // and we handle it with responsiveScreenWidth/Height
       designSize: const Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
+      // Prevent over-scaling on tablets by using device screen size directly for large screens
+      responsiveWidgets: const [],
       builder: (context, child) {
+        // Get the actual screen size
+        final screenWidth = MediaQuery.of(context).size.width;
+
+        // On tablets (width >= 600), use the actual device size as design size
+        // This prevents .h and .w from scaling up
+        if (screenWidth >= 600) {
+          ScreenUtil.init(
+            context,
+            designSize: MediaQuery.of(context).size,
+            minTextAdapt: true,
+            splitScreenMode: true,
+          );
+        }
+
         return MaterialApp.router(
           title: 'Sus Night',
           debugShowCheckedModeBanner: false,

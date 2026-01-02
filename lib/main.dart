@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
+import 'presentation/providers/ad_provider.dart';
 import 'app.dart';
 
 void main() async {
@@ -28,9 +29,17 @@ void main() async {
     anonKey: SupabaseConfig.anonKey,
   );
 
+  // Create provider container for early ad initialization
+  final container = ProviderContainer();
+
+  // Pre-initialize ads so they're ready when the user finishes a game
+  // This runs in the background and doesn't block app startup
+  container.read(adControllerProvider.notifier);
+
   runApp(
-    const ProviderScope(
-      child: SusNightApp(),
+    UncontrolledProviderScope(
+      container: container,
+      child: const SusNightApp(),
     ),
   );
 }

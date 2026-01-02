@@ -33,7 +33,7 @@
         <!-- AdMob App ID - Replace with your production ID -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-8579723509821585~2681722748"/>
     </application>
     <!-- Billing permission for In-App Purchases -->
     <uses-permission android:name="com.android.vending.BILLING" />

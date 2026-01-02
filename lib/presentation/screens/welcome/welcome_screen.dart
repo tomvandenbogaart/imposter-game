@@ -253,10 +253,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         .fadeIn(delay: 900.ms, duration: 600.ms)
                         .slideX(begin: -0.1),
 
-                    SizedBox(height: 48.h),
-                  ],
-                ),
+                  SizedBox(height: 48.h),
+                ],
               ),
+            ),
               Positioned(
                 top: 0,
                 left: 0,
