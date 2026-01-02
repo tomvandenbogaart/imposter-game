@@ -33,11 +33,39 @@ class PurchaseNotifier extends StateNotifier<PurchaseState> {
   }
 
   void _listenToPurchases() {
-    _subscription = _iapService.purchaseStream.listen(_handlePurchaseUpdate);
+    AppLogger.i('PurchaseNotifier: Subscribing to purchase stream');
+    _subscription = _iapService.purchaseStream.listen(
+      _handlePurchaseUpdate,
+      onError: (e) => AppLogger.e('PurchaseNotifier stream error', e),
+      onDone: () => AppLogger.i('PurchaseNotifier stream done'),
+    );
   }
+
+  final Set<String> _processedTransactions = {};
 
   Future<void> _handlePurchaseUpdate(List<PurchaseDetails> purchases) async {
     for (final purchase in purchases) {
+      // Skip already processed transactions to prevent loops
+      final transactionId = purchase.purchaseID ?? purchase.productID;
+      final alreadyProcessed = _processedTransactions.contains(transactionId);
+
+      if (alreadyProcessed) {
+        AppLogger.i('Purchase already processed: ${purchase.productID} (id: $transactionId)');
+        // For restored purchases, still grant entitlements (idempotent) and update UI
+        if (purchase.status == PurchaseStatus.restored) {
+          await _entitlementNotifier.grantEntitlementForProduct(purchase.productID);
+          state = state.copyWith(
+            status: AppPurchaseStatus.restored,
+            restoredCount: state.restoredCount + 1,
+          );
+        }
+        // Still need to complete the purchase
+        if (purchase.pendingCompletePurchase) {
+          await _iapService.completePurchase(purchase);
+        }
+        continue;
+      }
+
       AppLogger.i(
           'Purchase update: ${purchase.productID} - ${purchase.status}');
 
@@ -51,15 +79,16 @@ class PurchaseNotifier extends StateNotifier<PurchaseState> {
 
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
+          // Mark as processed to prevent re-processing
+          _processedTransactions.add(transactionId);
+
           state = state.copyWith(status: AppPurchaseStatus.verifying);
 
           try {
-            // Send to backend for validation and entitlement granting
-            await _entitlementNotifier.validatePurchase(
-              store: _iapService.storeName,
-              storeProductId: purchase.productID,
-              storeTransactionId: purchase.purchaseID ?? '',
-              purchaseToken: purchase.verificationData.serverVerificationData,
+            // Grant entitlements locally based on product ID
+            // The App Store / Play Store has already validated the purchase
+            await _entitlementNotifier.grantEntitlementForProduct(
+              purchase.productID,
             );
 
             // Complete the purchase with the store
@@ -74,7 +103,7 @@ class PurchaseNotifier extends StateNotifier<PurchaseState> {
                   : state.restoredCount,
             );
           } catch (e) {
-            AppLogger.e('Purchase validation error', e);
+            AppLogger.e('Purchase processing error', e);
             state = state.copyWith(
               status: AppPurchaseStatus.error,
               errorMessage: e.toString(),
@@ -133,6 +162,11 @@ class PurchaseNotifier extends StateNotifier<PurchaseState> {
   }
 
   Future<void> restorePurchases() async {
+    AppLogger.i('PurchaseNotifier: Starting restore purchases');
+
+    // Clear entitlements first - they will be re-granted if StoreKit returns valid purchases
+    await _entitlementNotifier.clearAllEntitlements();
+
     state = state.copyWith(
       status: AppPurchaseStatus.loading,
       restoredCount: 0,
@@ -142,10 +176,13 @@ class PurchaseNotifier extends StateNotifier<PurchaseState> {
     await _iapService.restorePurchases();
 
     // Wait a moment for restore to complete
+    AppLogger.i('PurchaseNotifier: Waiting for restore events...');
     await Future.delayed(const Duration(seconds: 2));
 
+    AppLogger.i('PurchaseNotifier: After wait, status=${state.status}, restoredCount=${state.restoredCount}');
     if (state.status == AppPurchaseStatus.loading) {
       // No purchases were restored
+      AppLogger.i('PurchaseNotifier: No purchases restored (status still loading)');
       state = state.copyWith(
         status: AppPurchaseStatus.restored,
         restoredCount: 0,
@@ -169,4 +206,23 @@ final purchaseNotifierProvider =
   final iapService = ref.watch(iapServiceProvider);
   final entitlementNotifier = ref.watch(entitlementNotifierProvider.notifier);
   return PurchaseNotifier(iapService, entitlementNotifier);
+});
+
+// IAP initializer - ensures proper ordering on startup
+final iapInitializerProvider = FutureProvider<void>((ref) async {
+  // 1. First load cached entitlements so UI shows correct state immediately
+  await ref.read(entitlementNotifierProvider.notifier).loadCachedEntitlements();
+
+  // 2. Get the notifier (this creates it and starts stream subscription)
+  final purchaseNotifier = ref.read(purchaseNotifierProvider.notifier);
+
+  // 3. Initialize IAP service
+  final iapService = ref.read(iapServiceProvider);
+  await iapService.initialize();
+
+  // 4. Small delay to ensure stream subscription is ready
+  await Future.delayed(const Duration(milliseconds: 100));
+
+  // 5. Now restore purchases - events will be caught by the listener
+  await purchaseNotifier.restorePurchases();
 });

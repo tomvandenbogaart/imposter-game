@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/purchase_state.dart';
 import '../../providers/iap_provider.dart';
+import '../../providers/entitlement_provider.dart';
 
 /// Shows the store dialog
 Future<void> showStoreDialog(BuildContext context, {WidgetRef? ref}) {
@@ -75,10 +76,24 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
     return sorted;
   }
 
+  bool _isProductOwned(String productId, bool hasNoAds, bool hasAllPacks) {
+    switch (productId) {
+      case 'remove_ads':
+        return hasNoAds;
+      case 'all_packs':
+        return hasAllPacks;
+      case 'packs_no_ads':
+        return hasNoAds && hasAllPacks;
+      default:
+        return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(storeProductsProvider);
     final purchaseState = ref.watch(purchaseNotifierProvider);
+    final entitlementsAsync = ref.watch(entitlementNotifierProvider);
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -109,48 +124,32 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Products
-                productsAsync.when(
-                  data: (products) {
-                    if (products.isEmpty) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'No products available',
-                          style: AppTypography.body.copyWith(
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      );
-                    }
-                    final sortedProducts = _sortProducts(products);
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: _buildProductList(sortedProducts, purchaseState, ref),
-                    );
-                  },
+                // Products - wait for both products AND entitlements to load
+                entitlementsAsync.when(
                   loading: () => const Padding(
                     padding: EdgeInsets.all(24),
                     child: CircularProgressIndicator(),
                   ),
-                  error: (e, _) => Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'Failed to load products',
-                      style: AppTypography.body.copyWith(color: AppColors.error),
-                    ),
+                  error: (_, __) => _buildProductsSection(
+                    productsAsync,
+                    purchaseState,
+                    ref,
+                    hasNoAds: false,
+                    hasAllPacks: false,
+                  ),
+                  data: (entitlements) => _buildProductsSection(
+                    productsAsync,
+                    purchaseState,
+                    ref,
+                    hasNoAds: entitlements.hasNoAds,
+                    hasAllPacks: entitlements.hasAllPacks,
                   ),
                 ),
                 const SizedBox(height: 16),
                 // Restore purchases
-                TextButton(
-                  onPressed: purchaseState.status == AppPurchaseStatus.loading
-                      ? null
-                      : () => ref.read(purchaseNotifierProvider.notifier).restorePurchases(),
-                  child: Text(
-                    'Restore Purchases',
-                    style: AppTypography.caption.copyWith(color: AppColors.orange),
-                  ),
+                _buildRestoreButton(
+                  isLoading: purchaseState.status == AppPurchaseStatus.loading,
+                  onPressed: () => ref.read(purchaseNotifierProvider.notifier).restorePurchases(),
                 ),
                 // Status messages
                 _buildStatusMessage(purchaseState),
@@ -162,15 +161,64 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
     );
   }
 
+  Widget _buildProductsSection(
+    AsyncValue<List<ProductDetails>> productsAsync,
+    PurchaseState purchaseState,
+    WidgetRef ref, {
+    required bool hasNoAds,
+    required bool hasAllPacks,
+  }) {
+    return productsAsync.when(
+      data: (products) {
+        if (products.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'No products available',
+              style: AppTypography.body.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
+          );
+        }
+        final sortedProducts = _sortProducts(products);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _buildProductList(
+            sortedProducts,
+            purchaseState,
+            ref,
+            hasNoAds: hasNoAds,
+            hasAllPacks: hasAllPacks,
+          ),
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.all(24),
+        child: CircularProgressIndicator(),
+      ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          'Failed to load products',
+          style: AppTypography.body.copyWith(color: AppColors.error),
+        ),
+      ),
+    );
+  }
+
   List<Widget> _buildProductList(
     List<ProductDetails> products,
     PurchaseState purchaseState,
-    WidgetRef ref,
-  ) {
+    WidgetRef ref, {
+    required bool hasNoAds,
+    required bool hasAllPacks,
+  }) {
     final widgets = <Widget>[];
     for (int i = 0; i < products.length; i++) {
       final product = products[i];
       final isBundle = product.id == _bundleProductId;
+      final isOwned = _isProductOwned(product.id, hasNoAds, hasAllPacks);
 
       // Add spacing between items, extra space before bundle for the badge
       if (i > 0) {
@@ -190,6 +238,7 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
           product: product,
           displayName: product.title,
           isBundle: isBundle,
+          isOwned: isOwned,
           isLoading: isInProgress,
           onPurchase: () => ref.read(purchaseNotifierProvider.notifier).purchase(product),
         ),
@@ -203,6 +252,7 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
     required ProductDetails product,
     required String displayName,
     required bool isBundle,
+    required bool isOwned,
     required bool isLoading,
     required VoidCallback onPurchase,
   }) {
@@ -212,16 +262,18 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
         Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: isLoading ? null : onPurchase,
+            onTap: (isLoading || isOwned) ? null : onPurchase,
             borderRadius: BorderRadius.circular(12),
             child: Ink(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: isOwned ? AppColors.success.withAlpha(25) : AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isBundle ? AppColors.gold : AppColors.surfaceLight,
-                  width: isBundle ? 2 : 1,
+                  color: isOwned
+                      ? AppColors.success
+                      : (isBundle ? AppColors.gold : AppColors.surfaceLight),
+                  width: (isBundle || isOwned) ? 2 : 1,
                 ),
               ),
               child: Row(
@@ -243,7 +295,7 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     constraints: const BoxConstraints(minWidth: 70),
                     decoration: BoxDecoration(
-                      color: AppColors.orange,
+                      color: isOwned ? AppColors.success : AppColors.orange,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: isLoading
@@ -258,7 +310,7 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
                             ),
                           )
                         : Text(
-                            product.price,
+                            isOwned ? '✓' : product.price,
                             textAlign: TextAlign.center,
                             style: AppTypography.body.copyWith(
                               color: Colors.white,
@@ -272,8 +324,8 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
             ),
           ),
         ),
-        // "Best" badge at the top center for bundle
-        if (isBundle)
+        // "Best" badge at the top center for bundle (hide if owned)
+        if (isBundle && !isOwned)
           Positioned(
             top: -10,
             left: 0,
@@ -297,6 +349,68 @@ class _StoreDialogContentState extends ConsumerState<_StoreDialogContent>
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildRestoreButton({
+    required bool isLoading,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      width: double.infinity,
+      height: 48,
+      decoration: BoxDecoration(
+        gradient: isLoading ? null : AppColors.primaryGradient,
+        color: isLoading ? AppColors.surfaceLight : null,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: isLoading
+            ? null
+            : [
+                BoxShadow(
+                  color: AppColors.orange.withValues(alpha: 0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isLoading ? null : onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.textMuted,
+                      ),
+                    ),
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.restore,
+                        color: AppColors.background,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Restore Purchases',
+                        style: AppTypography.button.copyWith(
+                          color: AppColors.background,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
     );
   }
 

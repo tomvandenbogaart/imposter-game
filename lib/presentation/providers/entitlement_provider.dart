@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/entitlement.dart';
 import '../../data/services/entitlement_service.dart';
-import 'auth_provider.dart';
 
 // Service provider
 final entitlementServiceProvider = Provider<EntitlementService>((ref) {
@@ -12,42 +11,42 @@ final entitlementServiceProvider = Provider<EntitlementService>((ref) {
 class EntitlementNotifier extends StateNotifier<AsyncValue<UserEntitlements>> {
   final EntitlementService _service;
 
-  EntitlementNotifier(this._service) : super(const AsyncValue.loading()) {
-    loadEntitlements();
+  EntitlementNotifier(this._service)
+      : super(const AsyncValue.loading()) {
+    // Load cached entitlements immediately on creation
+    _initializeEntitlements();
   }
 
-  Future<void> loadEntitlements() async {
-    state = const AsyncValue.loading();
-    try {
-      final entitlements = await _service.fetchEntitlements();
-      state = AsyncValue.data(entitlements);
-    } catch (e, st) {
-      // Fall back to cached entitlements on error
-      final cached = await _service.getCachedEntitlements();
-      state = AsyncValue.data(cached);
-    }
+  Future<void> _initializeEntitlements() async {
+    await loadCachedEntitlements();
   }
 
-  Future<void> validatePurchase({
-    required String store,
-    required String storeProductId,
-    required String storeTransactionId,
-    String? purchaseToken,
-  }) async {
-    final entitlements = await _service.validatePurchase(
-      store: store,
-      storeProductId: storeProductId,
-      storeTransactionId: storeTransactionId,
-      purchaseToken: purchaseToken,
-    );
+  /// Load cached entitlements from local storage
+  /// Call this explicitly on startup to ensure entitlements are loaded before UI renders
+  Future<void> loadCachedEntitlements() async {
+    final cached = await _service.getCachedEntitlements();
+    state = AsyncValue.data(cached);
+  }
+
+  /// Refresh entitlements from local cache
+  /// For device-based IAP, we only use locally cached entitlements
+  Future<void> refresh() async {
+    await loadCachedEntitlements();
+  }
+
+  /// Grant entitlement locally based on product ID (no server validation)
+  Future<void> grantEntitlementForProduct(String productId) async {
+    final entitlements = await _service.grantLocalEntitlement(productId);
     state = AsyncValue.data(entitlements);
   }
 
-  Future<void> refresh() async {
-    await loadEntitlements();
+  Future<void> clearOnLogout() async {
+    await _service.clearCache();
+    state = const AsyncValue.data(UserEntitlements());
   }
 
-  Future<void> clearOnLogout() async {
+  /// Clear all entitlements (for testing/debugging)
+  Future<void> clearAllEntitlements() async {
     await _service.clearCache();
     state = const AsyncValue.data(UserEntitlements());
   }
@@ -57,17 +56,9 @@ final entitlementNotifierProvider =
     StateNotifierProvider<EntitlementNotifier, AsyncValue<UserEntitlements>>(
         (ref) {
   final service = ref.watch(entitlementServiceProvider);
-  final notifier = EntitlementNotifier(service);
-
-  // Re-load entitlements when auth state changes
-  ref.listen(authStateProvider, (previous, next) {
-    final hasSession = next.valueOrNull?.session != null;
-    if (hasSession) {
-      notifier.loadEntitlements();
-    }
-  });
-
-  return notifier;
+  return EntitlementNotifier(service);
+  // Note: For device-based IAP, entitlements are stored locally via SharedPreferences.
+  // No need to re-fetch from server when auth state changes.
 });
 
 // Convenience providers for easy access

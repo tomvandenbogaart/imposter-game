@@ -1,0 +1,4 @@
+# Configuration for the start-round edge function
+# Disable JWT verification since the function uses service role key
+# and validates the room_id internally
+verify_jwt = false

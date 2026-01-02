@@ -75,6 +75,17 @@ class PlayerRepository {
   }
 
   Future<void> leaveRoom(String playerId) async {
+    // Try to delete votes first (may fail due to RLS, that's ok)
+    try {
+      await _client.from('votes').delete().eq('voter_player_id', playerId);
+    } catch (_) {}
+    try {
+      await _client.from('votes').delete().eq('voted_player_id', playerId);
+    } catch (_) {}
+    try {
+      await _client.from('skip_votes').delete().eq('player_id', playerId);
+    } catch (_) {}
+    // Now delete the player
     await _client.from('players').delete().eq('id', playerId);
   }
 

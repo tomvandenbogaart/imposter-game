@@ -7,3 +7,4 @@ export 'player_card.dart';
 export 'local_player.dart';
 export 'local_game_settings.dart';
 export 'local_game_state.dart';
+export 'skip_vote.dart';

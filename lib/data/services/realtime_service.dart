@@ -28,8 +28,12 @@ class RealtimeService {
               if (payload.eventType == PostgresChangeEvent.delete) {
                 controller.add(null);
               } else {
-                final room = Room.fromJson(payload.newRecord);
-                controller.add(room);
+                // Refetch room to get all fields
+                _fetchRoom(roomId).then((room) {
+                  if (!controller.isClosed) {
+                    controller.add(room);
+                  }
+                });
               }
             }
           },
@@ -40,6 +44,14 @@ class RealtimeService {
         _fetchRoom(roomId).then((room) {
           if (!controller.isClosed) {
             controller.add(room);
+            // Refetch after a short delay to catch any updates that happened before subscription
+            Future.delayed(const Duration(milliseconds: 500), () {
+              _fetchRoom(roomId).then((updatedRoom) {
+                if (!controller.isClosed) {
+                  controller.add(updatedRoom);
+                }
+              });
+            });
           }
         });
       }
@@ -70,8 +82,10 @@ class RealtimeService {
             value: roomId,
           ),
           callback: (payload) {
+            print('🟣 Players realtime event: ${payload.eventType} for room $roomId');
             // Refetch all players on any change
             _fetchPlayers(roomId).then((players) {
+              print('🟣 Fetched ${players.length} players after realtime event');
               if (!controller.isClosed) {
                 controller.add(players);
               }
@@ -117,8 +131,12 @@ class RealtimeService {
               if (payload.eventType == PostgresChangeEvent.delete) {
                 controller.add(null);
               } else {
-                final round = Round.fromJson(payload.newRecord);
-                controller.add(round);
+                // Refetch round to get all fields (realtime payload may be incomplete)
+                _fetchRound(roundId).then((round) {
+                  if (!controller.isClosed) {
+                    controller.add(round);
+                  }
+                });
               }
             }
           },
@@ -216,6 +234,56 @@ class RealtimeService {
         .select()
         .eq('round_id', roundId);
     return (response as List).map((e) => Vote.fromJson(e)).toList();
+  }
+
+  Stream<List<SkipVote>> watchSkipVotes(String roundId) {
+    final controller = StreamController<List<SkipVote>>.broadcast();
+
+    final channel = _client.channel('skip_votes:$roundId');
+    _channels['skip_votes:$roundId'] = channel;
+
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'skip_votes',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'round_id',
+            value: roundId,
+          ),
+          callback: (payload) {
+            _fetchSkipVotes(roundId).then((skipVotes) {
+              if (!controller.isClosed) {
+                controller.add(skipVotes);
+              }
+            });
+          },
+        )
+        .subscribe((status, [error]) {
+      if (status == RealtimeSubscribeStatus.subscribed) {
+        _fetchSkipVotes(roundId).then((skipVotes) {
+          if (!controller.isClosed) {
+            controller.add(skipVotes);
+          }
+        });
+      }
+    });
+
+    controller.onCancel = () {
+      channel.unsubscribe();
+      _channels.remove('skip_votes:$roundId');
+    };
+
+    return controller.stream;
+  }
+
+  Future<List<SkipVote>> _fetchSkipVotes(String roundId) async {
+    final response = await _client
+        .from('skip_votes')
+        .select()
+        .eq('round_id', roundId);
+    return (response as List).map((e) => SkipVote.fromJson(e)).toList();
   }
 
   void dispose() {

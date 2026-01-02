@@ -2,7 +2,7 @@
 -- Safe to run multiple times (uses upsert pattern)
 
 -- =====================================================
--- WORD PACKS (16 total: 3 FREE, 13 PREMIUM)
+-- WORD PACKS (16 total: 1 FREE, 15 PREMIUM)
 -- =====================================================
 
 -- Delete existing words first (to avoid duplicates on re-run)
@@ -10,12 +10,12 @@ DELETE FROM words;
 
 -- Create/update word packs with categories
 INSERT INTO word_packs (id, name, language, is_premium, category, icon_name, sort_order) VALUES
-  -- FREE PACKS (3)
+  -- FREE PACKS (1)
   ('550e8400-e29b-41d4-a716-446655440000', 'General', 'en', false, 'free', 'category', 0),
-  ('550e8400-e29b-41d4-a716-446655440001', 'Pop Culture & Memes', 'en', false, 'free', 'trending_up', 1),
-  ('550e8400-e29b-41d4-a716-446655440002', 'Party Classics', 'en', false, 'free', 'celebration', 2),
 
-  -- ENTERTAINMENT (3)
+  -- ENTERTAINMENT (5)
+  ('550e8400-e29b-41d4-a716-446655440001', 'Pop Culture & Memes', 'en', true, 'entertainment', 'trending_up', 1),
+  ('550e8400-e29b-41d4-a716-446655440002', 'Party Classics', 'en', true, 'entertainment', 'celebration', 2),
   ('550e8400-e29b-41d4-a716-446655440003', 'Movies & TV', 'en', true, 'entertainment', 'movie', 10),
   ('550e8400-e29b-41d4-a716-446655440004', 'Music & Artists', 'en', true, 'entertainment', 'music_note', 11),
   ('550e8400-e29b-41d4-a716-446655440005', 'Tech & Gaming', 'en', true, 'entertainment', 'sports_esports', 12),

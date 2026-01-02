@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../../data/models/models.dart';
+import '../../../data/services/supabase_service.dart';
 import '../../providers/room_provider.dart';
 import '../../providers/game_provider.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../widgets/cards/glass_card.dart';
+import '../../widgets/word_pack/online_word_pack_selector.dart';
 
 class LobbyScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -79,7 +83,19 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
   Widget build(BuildContext context) {
     final roomAsync = ref.watch(roomStreamProvider(widget.roomId));
     final playersAsync = ref.watch(playersStreamProvider(widget.roomId));
-    final isHost = ref.watch(isHostProvider);
+
+    // Determine if current user is host by finding our player in the players list
+    final room = roomAsync.valueOrNull;
+    final players = playersAsync.valueOrNull ?? [];
+    final currentUserId = SupabaseService.currentUserId;
+    final currentPlayer = currentUserId != null
+        ? players.where((p) => p.userId == currentUserId).firstOrNull
+        : null;
+    final isHost = room != null &&
+        currentPlayer != null &&
+        room.hostPlayerId == currentPlayer.id;
+
+    AppLogger.d('LobbyScreen: currentUserId=$currentUserId, players=${players.map((p) => '${p.displayName}(userId:${p.userId})').toList()}, currentPlayer=${currentPlayer?.displayName}, room.hostPlayerId=${room?.hostPlayerId}, isHost=$isHost');
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -125,16 +141,28 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
 
               const SizedBox(height: 24),
 
-              // Start Game Button (host only)
+              // Host controls: Word Pack selector + Start Game Button
               if (isHost)
                 playersAsync.when(
                   data: (players) {
-                    final canStart = players.length >= 3;
+                    final minPlayers = roomAsync.valueOrNull?.settings.minPlayers ?? 2;
+                    final canStart = players.length >= minPlayers;
                     return Column(
                       children: [
+                        // Word Pack Selector
+                        OnlineWordPackSelector(
+                          selectedPackId: room.settings.packId,
+                          onPackSelected: (packId) async {
+                            await ref.read(roomRepositoryProvider).updateSettings(
+                              widget.roomId,
+                              room.settings.copyWith(packId: packId),
+                            );
+                          },
+                        ).animate().fadeIn(delay: 100.ms),
+                        SizedBox(height: 16.h),
                         if (!canStart)
                           Text(
-                            'Need at least 3 players to start',
+                            'Need at least $minPlayers players to start',
                             style: AppTypography.bodySmall.copyWith(
                               color: AppColors.textMuted,
                             ),

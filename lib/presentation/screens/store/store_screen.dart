@@ -140,27 +140,14 @@ class StoreScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Restore purchases button
-          OutlinedButton.icon(
-            onPressed: purchaseState.status == AppPurchaseStatus.loading
-                ? null
-                : () => ref
-                    .read(purchaseNotifierProvider.notifier)
-                    .restorePurchases(),
-            icon: const Icon(Icons.restore, color: AppColors.orange),
-            label: Text(
-              'Restore Purchases',
-              style: AppTypography.button.copyWith(color: AppColors.orange),
-            ),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.orange),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+          _RestoreButton(
+            isLoading: purchaseState.status == AppPurchaseStatus.loading,
+            onPressed: () => ref
+                .read(purchaseNotifierProvider.notifier)
+                .restorePurchases(),
           ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
           // Legal text
           Text(
@@ -270,7 +257,7 @@ class StoreScreen extends ConsumerWidget {
             bundle: true,
           ),
           _ComparisonRow(
-            feature: 'All word packs',
+            feature: 'All theme packs',
             removeAds: false,
             allPacks: true,
             bundle: true,
@@ -491,6 +478,75 @@ class _ComparisonRow extends StatelessWidget {
         value ? Icons.check_circle : Icons.remove_circle_outline,
         color: value ? AppColors.success : AppColors.textMuted,
         size: 20,
+      ),
+    );
+  }
+}
+
+class _RestoreButton extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  const _RestoreButton({
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: isLoading ? null : AppColors.primaryGradient,
+        color: isLoading ? AppColors.surfaceLight : null,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isLoading
+            ? null
+            : [
+                BoxShadow(
+                  color: AppColors.orange.withValues(alpha: 0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isLoading ? null : onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.textMuted,
+                      ),
+                    ),
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.restore,
+                        color: AppColors.background,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Restore Purchases',
+                        style: AppTypography.button.copyWith(
+                          color: AppColors.background,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
       ),
     );
   }

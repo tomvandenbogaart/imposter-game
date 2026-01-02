@@ -6,14 +6,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Note: This function uses the service role key to bypass RLS
+// The function itself validates room_id is provided
+
 serve(async (req) => {
+  console.log('start-round function called')
+  console.log('Method:', req.method)
+  console.log('Headers:', JSON.stringify(Object.fromEntries(req.headers.entries())))
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { room_id } = await req.json()
+    const body = await req.json()
+    console.log('Request body:', JSON.stringify(body))
+    const { room_id } = body
 
     if (!room_id) {
       return new Response(
@@ -23,12 +32,32 @@ serve(async (req) => {
     }
 
     // Create Supabase client with service role key
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+    console.log('Supabase URL:', supabaseUrl)
+    console.log('Service key exists:', !!supabaseServiceKey)
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase environment variables')
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // 1. Get all connected players in room
+    // 1. Get room settings to check for selected pack
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('settings')
+      .eq('id', room_id)
+      .single()
+
+    if (roomError) {
+      throw new Error(`Failed to get room: ${roomError.message}`)
+    }
+
+    const packId = room?.settings?.packId
+
+    // 2. Get all connected players in room
     const { data: players, error: playersError } = await supabase
       .from('players')
       .select('id')
@@ -46,22 +75,28 @@ serve(async (req) => {
       )
     }
 
-    // 2. Get a random word
-    const { data: words, error: wordsError } = await supabase
+    // 3. Get a random word (filtered by packId if specified)
+    let wordsQuery = supabase
       .from('words')
       .select('id, word, hint')
 
+    if (packId) {
+      wordsQuery = wordsQuery.eq('pack_id', packId)
+    }
+
+    const { data: words, error: wordsError } = await wordsQuery
+
     if (wordsError || !words || words.length === 0) {
-      throw new Error('Failed to get words')
+      throw new Error(packId ? 'No words found in selected pack' : 'Failed to get words')
     }
 
     const selectedWord = words[Math.floor(Math.random() * words.length)]
 
-    // 3. Select random imposter
+    // 4. Select random imposter
     const imposterIndex = Math.floor(Math.random() * players.length)
     const imposterId = players[imposterIndex].id
 
-    // 4. Get current round count
+    // 5. Get current round count
     const { data: existingRounds } = await supabase
       .from('rounds')
       .select('round_number')
@@ -73,10 +108,13 @@ serve(async (req) => {
       ? existingRounds[0].round_number + 1
       : 1
 
-    // 5. Calculate timer end (2 minutes from now)
-    const endsAt = new Date(Date.now() + 120 * 1000).toISOString()
+    // 6. Calculate timing
+    // Reveal phase: 10 seconds for players to see their cards
+    // Discussion phase: 2 minutes (120 seconds) after reveal ends
+    const revealEndsAt = new Date(Date.now() + 10 * 1000).toISOString()
+    const endsAt = new Date(Date.now() + 10 * 1000 + 120 * 1000).toISOString()
 
-    // 6. Create round
+    // 7. Create round
     const { data: round, error: roundError } = await supabase
       .from('rounds')
       .insert({
@@ -84,6 +122,7 @@ serve(async (req) => {
         round_number: roundNumber,
         word_id: selectedWord.id,
         imposter_player_id: imposterId,
+        reveal_ends_at: revealEndsAt,
         ends_at: endsAt,
         state: 'reveal'
       })
@@ -94,7 +133,7 @@ serve(async (req) => {
       throw new Error(`Failed to create round: ${roundError.message}`)
     }
 
-    // 7. Create player cards
+    // 8. Create player cards
     const playerCards = players.map(player => ({
       round_id: round.id,
       player_id: player.id,
@@ -112,8 +151,8 @@ serve(async (req) => {
       throw new Error(`Failed to create player cards: ${cardsError.message}`)
     }
 
-    // 8. Update room status and current round
-    const { error: roomError } = await supabase
+    // 9. Update room status and current round
+    const { error: roomUpdateError } = await supabase
       .from('rooms')
       .update({
         status: 'playing',
@@ -121,26 +160,12 @@ serve(async (req) => {
       })
       .eq('id', room_id)
 
-    if (roomError) {
-      throw new Error(`Failed to update room: ${roomError.message}`)
+    if (roomUpdateError) {
+      throw new Error(`Failed to update room: ${roomUpdateError.message}`)
     }
 
-    // 9. Schedule state transitions
-    // After 5 seconds, move to discussion
-    setTimeout(async () => {
-      await supabase
-        .from('rounds')
-        .update({ state: 'discussion' })
-        .eq('id', round.id)
-    }, 5000)
-
-    // After timer ends, move to voting
-    setTimeout(async () => {
-      await supabase
-        .from('rounds')
-        .update({ state: 'voting' })
-        .eq('id', round.id)
-    }, 125 * 1000) // 5s reveal + 120s discussion
+    // Note: State transitions (reveal -> discussion -> voting) are handled client-side
+    // because edge functions cannot use setTimeout reliably (they terminate after response)
 
     return new Response(
       JSON.stringify({

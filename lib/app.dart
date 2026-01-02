@@ -4,8 +4,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/config/router_config.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_colors.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/providers/locale_provider.dart';
+import 'presentation/providers/iap_provider.dart';
 
 class SusNightApp extends ConsumerStatefulWidget {
   const SusNightApp({super.key});
@@ -25,7 +27,26 @@ class _SusNightAppState extends ConsumerState<SusNightApp> {
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
+    final initAsync = ref.watch(iapInitializerProvider);
 
+    return initAsync.when(
+      loading: () => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: AppColors.background,
+          body: Center(
+            child: CircularProgressIndicator(
+              color: AppColors.orange,
+            ),
+          ),
+        ),
+      ),
+      error: (_, __) => _buildMainApp(locale),
+      data: (_) => _buildMainApp(locale),
+    );
+  }
+
+  Widget _buildMainApp(Locale? locale) {
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,

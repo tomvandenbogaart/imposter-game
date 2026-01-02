@@ -25,13 +25,13 @@
       "internalID" : "2",
       "localizations" : [
         {
-          "description" : "Unlock all premium word packs",
-          "displayName" : "All Word Packs",
+          "description" : "Unlock all premium theme packs",
+          "displayName" : "All Theme Packs",
           "locale" : "en_US"
         }
       ],
       "productID" : "all_packs",
-      "referenceName" : "All Word Packs",
+      "referenceName" : "All Theme Packs",
       "type" : "NonConsumable"
     },
     {

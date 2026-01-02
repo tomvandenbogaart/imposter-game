@@ -6,6 +6,7 @@ import '../../core/utils/app_logger.dart';
 class IAPService {
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
+  bool _isInitialized = false;
 
   final _purchaseUpdatedController =
       StreamController<List<PurchaseDetails>>.broadcast();
@@ -20,6 +21,11 @@ class IAPService {
   };
 
   Future<bool> initialize() async {
+    if (_isInitialized) {
+      AppLogger.i('IAP service already initialized');
+      return true;
+    }
+
     final available = await _iap.isAvailable();
     if (!available) {
       AppLogger.w('IAP not available on this device');
@@ -29,12 +35,20 @@ class IAPService {
     // Listen to purchase updates
     _subscription = _iap.purchaseStream.listen(
       (purchaseDetailsList) {
+        AppLogger.i('IAP stream received ${purchaseDetailsList.length} purchases');
+        for (final p in purchaseDetailsList) {
+          AppLogger.i('  - ${p.productID}: ${p.status} (id: ${p.purchaseID})');
+        }
         _purchaseUpdatedController.add(purchaseDetailsList);
       },
-      onDone: () => _subscription?.cancel(),
+      onDone: () {
+        AppLogger.i('IAP stream done');
+        _subscription?.cancel();
+      },
       onError: (error) => AppLogger.e('Purchase stream error', error),
     );
 
+    _isInitialized = true;
     AppLogger.i('IAP service initialized');
     return true;
   }
@@ -70,7 +84,13 @@ class IAPService {
 
   Future<void> restorePurchases() async {
     AppLogger.i('Restoring purchases...');
-    await _iap.restorePurchases();
+    try {
+      await _iap.restorePurchases();
+      AppLogger.i('Restore purchases call completed');
+    } catch (e) {
+      AppLogger.e('Restore purchases failed', e);
+      rethrow;
+    }
   }
 
   Future<void> completePurchase(PurchaseDetails purchase) async {

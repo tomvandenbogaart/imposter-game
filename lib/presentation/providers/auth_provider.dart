@@ -34,23 +34,29 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     state = AsyncValue.data(user);
   }
 
-  Future<void> signInAnonymously() async {
+  Future<User?> signInAnonymously() async {
     AppLogger.i('Signing in anonymously...');
     state = const AsyncValue.loading();
     try {
       final response = await _authService.signInAnonymously();
       AppLogger.i('Anonymous sign-in successful: ${response.user?.id}');
       state = AsyncValue.data(response.user);
+      return response.user;
     } catch (e, st) {
       AppLogger.e('Anonymous sign-in failed', e, st);
       state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 
   Future<void> ensureAuthenticated() async {
     AppLogger.i('Ensuring authenticated, current: ${_authService.isAuthenticated}');
     if (!_authService.isAuthenticated) {
-      await signInAnonymously();
+      final user = await signInAnonymously();
+      if (user == null) {
+        throw Exception('Anonymous sign-in failed - no user returned');
+      }
+      AppLogger.i('Now authenticated: ${user.id}');
     } else {
       AppLogger.i('Already authenticated: ${_authService.currentUserId}');
     }

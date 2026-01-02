@@ -52,6 +52,22 @@ class RoundRepository {
         .eq('id', roundId);
   }
 
+  Future<void> saveRoundResult({
+    required String roundId,
+    required bool groupWins,
+    required String? mostVotedPlayerId,
+    required String? imposterName,
+    required List<VoteResult> voteResults,
+  }) async {
+    await _client.from('rounds').update({
+      'group_wins': groupWins,
+      'most_voted_player_id': mostVotedPlayerId,
+      'imposter_name': imposterName,
+      'vote_results': voteResults.map((v) => v.toJson()).toList(),
+      'state': RoundState.results.name,
+    }).eq('id', roundId);
+  }
+
   Stream<Round?> watchRound(String roundId) {
     return _realtimeService.watchRound(roundId);
   }

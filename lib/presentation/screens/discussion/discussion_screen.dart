@@ -1,13 +1,19 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/models.dart';
 import '../../providers/room_provider.dart';
 import '../../providers/game_provider.dart';
-import '../../widgets/cards/glass_card.dart';
+import '../../providers/auth_provider.dart';
+import '../../widgets/local_game/timer_arc.dart';
+import '../../widgets/buttons/primary_button.dart';
 
 class DiscussionScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -19,40 +25,88 @@ class DiscussionScreen extends ConsumerStatefulWidget {
 }
 
 class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
+  String? _starterPlayerName;
+  bool _timerStarted = false;
+  bool _hasVotedToSkip = false;
+  bool _timerExpiredHandled = false;
+
   @override
   void initState() {
     super.initState();
-    _watchRoundState();
-    _startTimer();
+    _selectStarterPlayer();
   }
 
-  void _watchRoundState() {
-    ref.listenManual(
-      roomStreamProvider(widget.roomId),
-      (previous, next) {
-        final room = next.valueOrNull;
-        if (room?.currentRoundId != null) {
-          ref.listenManual(
-            roundStreamProvider(room!.currentRoundId!),
-            (prevRound, nextRound) {
-              final round = nextRound.valueOrNull;
-              if (round?.state == RoundState.voting) {
-                context.go('/game/${widget.roomId}/voting');
-              }
-            },
-          );
-        }
-      },
-    );
+  void _selectStarterPlayer() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final players = ref.read(playersStreamProvider(widget.roomId)).valueOrNull;
+      if (players != null && players.isNotEmpty) {
+        final random = Random();
+        final starter = players[random.nextInt(players.length)];
+        setState(() {
+          _starterPlayerName = starter.displayName;
+        });
+      }
+    });
   }
 
-  void _startTimer() {
-    // Get round and start timer
+  void _startTimerIfNeeded(Round round) {
+    if (_timerStarted) return;
+    if (round.endsAt != null) {
+      _timerStarted = true;
+      ref.read(timerProvider.notifier).startTimer(round.endsAt!);
+    }
+  }
+
+  void _toggleSkipVote(String? myPlayerId) async {
     final room = ref.read(roomStreamProvider(widget.roomId)).valueOrNull;
-    if (room?.currentRoundId != null) {
-      ref.read(roundStreamProvider(room!.currentRoundId!)).whenData((round) {
-        if (round?.endsAt != null) {
-          ref.read(timerProvider.notifier).startTimer(round!.endsAt!);
+    if (room?.currentRoundId == null || myPlayerId == null) {
+      print('🔴 Skip vote failed: roundId=${room?.currentRoundId}, playerId=$myPlayerId');
+      return;
+    }
+
+    print('🟢 Toggling skip vote for player $myPlayerId');
+    final repository = ref.read(skipVoteRepositoryProvider);
+
+    try {
+      if (_hasVotedToSkip) {
+        await repository.removeSkipVote(room!.currentRoundId!, myPlayerId);
+        setState(() {
+          _hasVotedToSkip = false;
+        });
+      } else {
+        await repository.submitSkipVote(room!.currentRoundId!, myPlayerId);
+        setState(() {
+          _hasVotedToSkip = true;
+        });
+      }
+      print('🟢 Skip vote toggled successfully');
+    } catch (e) {
+      print('🔴 Skip vote error: $e');
+    }
+  }
+
+  void _transitionToVoting(String roundId) async {
+    if (_timerExpiredHandled) return;
+    _timerExpiredHandled = true;
+
+    print('🟢 Timer expired, transitioning to voting');
+    try {
+      final repository = ref.read(roundRepositoryProvider);
+      await repository.updateRoundState(roundId, RoundState.voting);
+    } catch (e) {
+      print('🔴 Error transitioning to voting: $e');
+    }
+  }
+
+  void _checkAllSkipped(int skipCount, int playerCount, String roundId) {
+    if (skipCount >= playerCount && playerCount > 0) {
+      // All players voted to skip, transition to voting
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          final repository = ref.read(roundRepositoryProvider);
+          await repository.updateRoundState(roundId, RoundState.voting);
+        } catch (e) {
+          // Ignore - another player may have already updated
         }
       });
     }
@@ -63,220 +117,185 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
     final roomAsync = ref.watch(roomStreamProvider(widget.roomId));
     final playersAsync = ref.watch(playersStreamProvider(widget.roomId));
     final timerDuration = ref.watch(timerProvider);
+    final room = roomAsync.valueOrNull;
+
+    // Derive myPlayerId reactively from watched players stream
+    final user = ref.watch(currentUserProvider);
+    final players = playersAsync.valueOrNull ?? [];
+    final myPlayerId = players.where((p) => p.userId == user?.id).firstOrNull?.id;
+
+    // Watch round for state changes
+    Round? round;
+    if (room?.currentRoundId != null) {
+      final roundAsync = ref.watch(roundStreamProvider(room!.currentRoundId!));
+      round = roundAsync.valueOrNull;
+
+      // Start timer when we have the round
+      if (round != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _startTimerIfNeeded(round!);
+        });
+      }
+
+      // Navigate to voting when state changes
+      if (round?.state == RoundState.voting) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            context.go('/game/${widget.roomId}/voting');
+          }
+        });
+      }
+
+      // Handle timer expiry - transition to voting when timer reaches zero
+      if (_timerStarted && timerDuration.inSeconds <= 0 && !_timerExpiredHandled) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _transitionToVoting(room.currentRoundId!);
+        });
+      }
+    }
+
+    // Calculate timer progress
+    final totalDuration = 120; // 2 minutes
+    final remainingSeconds = timerDuration.inSeconds;
+    final progress = remainingSeconds / totalDuration;
+    final isUrgent = remainingSeconds <= 30;
 
     final minutes = timerDuration.inMinutes;
     final seconds = timerDuration.inSeconds % 60;
-    final isUrgent = timerDuration.inSeconds < 30;
+    final formattedTime = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              // Timer
-              _TimerDisplay(
-                minutes: minutes,
-                seconds: seconds,
-                isUrgent: isUrgent,
-              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(context.screenPadding),
+            child: Column(
+              children: [
+                // Title
+                Text(
+                  'Discussion',
+                  style: AppTypography.h2,
+                ).animate().fadeIn(duration: 400.ms),
 
-              const SizedBox(height: 16),
+                SizedBox(height: 8.h),
 
-              Text(
-                'Discuss!',
-                style: AppTypography.h1,
-              ).animate().fadeIn(delay: 200.ms),
+                Text(
+                  'Find the imposter!',
+                  style: AppTypography.bodySmall,
+                ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
-              const SizedBox(height: 8),
+                SizedBox(height: 16.h),
 
-              Text(
-                'Ask questions to find the imposter',
-                style: AppTypography.bodySmall,
-              ).animate().fadeIn(delay: 300.ms),
+                // Show who starts the discussion
+                if (_starterPlayerName != null)
+                  ShaderMask(
+                    shaderCallback: (bounds) =>
+                        AppColors.primaryGradient.createShader(bounds),
+                    child: Text(
+                      '$_starterPlayerName starts!',
+                      style: AppTypography.h1.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 36.sp,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 300.ms, duration: 400.ms)
+                      .scale(
+                        begin: const Offset(0.8, 0.8),
+                        duration: 400.ms,
+                        curve: Curves.elasticOut,
+                      ),
 
-              const SizedBox(height: 32),
+                const Spacer(),
 
-              // Player Grid
-              Expanded(
-                child: playersAsync.when(
-                  data: (players) => _PlayersGrid(players: players),
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Error: $e')),
+                // Timer arc
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    TimerArc(
+                      progress: progress.clamp(0.0, 1.0),
+                      size: context.isTablet ? 300.w : 240.w,
+                      strokeWidth: 16.w,
+                      isUrgent: isUrgent,
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          formattedTime,
+                          style: AppTypography.timer.copyWith(
+                            color: isUrgent ? AppColors.error : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+                    .animate()
+                    .fadeIn(delay: 300.ms, duration: 600.ms)
+                    .scale(begin: const Offset(0.9, 0.9)),
+
+                const Spacer(),
+
+                // Player list
+                playersAsync.when(
+                  data: (players) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Players',
+                        style: AppTypography.caption,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        players.map((p) => p.displayName).join('  •  '),
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 700.ms, duration: 400.ms),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
                 ),
-              ),
 
-              const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
-              // My card reminder
-              roomAsync.when(
-                data: (room) {
-                  if (room?.currentRoundId == null) return const SizedBox.shrink();
-                  return _MyCardReminder(roundId: room!.currentRoundId!);
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
-            ],
+                // Skip to vote button with counter
+                Builder(
+                  builder: (context) {
+                    final playerCount = players.length;
+
+                    // Watch skip votes for this round
+                    int skipCount = 0;
+                    if (room?.currentRoundId != null) {
+                      final skipVotesAsync = ref.watch(skipVotesStreamProvider(room!.currentRoundId!));
+                      skipCount = skipVotesAsync.valueOrNull?.length ?? 0;
+
+                      // Check if all players voted to skip
+                      _checkAllSkipped(skipCount, playerCount, room.currentRoundId!);
+                    }
+
+                    final buttonLabel = 'Skip to Vote ($skipCount/$playerCount)';
+
+                    return PrimaryButton(
+                      label: buttonLabel,
+                      icon: _hasVotedToSkip ? Icons.check_rounded : Icons.how_to_vote_rounded,
+                      onPressed: () => _toggleSkipVote(myPlayerId),
+                    );
+                  },
+                ).animate().fadeIn(delay: 900.ms, duration: 400.ms),
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _TimerDisplay extends StatelessWidget {
-  final int minutes;
-  final int seconds;
-  final bool isUrgent;
-
-  const _TimerDisplay({
-    required this.minutes,
-    required this.seconds,
-    required this.isUrgent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-      decoration: BoxDecoration(
-        gradient: isUrgent ? AppColors.urgentGradient : AppColors.timerGradient,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: (isUrgent ? AppColors.error : AppColors.cyan).withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Text(
-        '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
-        style: AppTypography.timer,
-      ),
-    )
-        .animate(target: isUrgent ? 1 : 0)
-        .shake(hz: 4, curve: Curves.easeInOut, duration: 500.ms);
-  }
-}
-
-class _PlayersGrid extends StatelessWidget {
-  final List<Player> players;
-
-  const _PlayersGrid({required this.players});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 0.9,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: players.length,
-      itemBuilder: (context, index) {
-        final player = players[index];
-        return _PlayerCard(player: player)
-            .animate()
-            .fadeIn(delay: (index * 100).ms)
-            .scale(begin: const Offset(0.8, 0.8));
-      },
-    );
-  }
-}
-
-class _PlayerCard extends StatelessWidget {
-  final Player player;
-
-  const _PlayerCard({required this.player});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceLight),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                player.displayName[0].toUpperCase(),
-                style: AppTypography.h2.copyWith(
-                  color: AppColors.background,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            player.displayName,
-            style: AppTypography.bodySmall,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MyCardReminder extends ConsumerWidget {
-  final String roundId;
-
-  const _MyCardReminder({required this.roundId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final cardAsync = ref.watch(myCardProvider(roundId));
-
-    return cardAsync.when(
-      data: (card) {
-        if (card == null) return const SizedBox.shrink();
-        final isImposter = card.cardType == CardType.imposter;
-
-        return GlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          gradient: isImposter
-              ? AppColors.imposterGradient
-              : AppColors.normalGradient,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isImposter ? Icons.psychology_rounded : Icons.lightbulb_rounded,
-                color: AppColors.textPrimary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isImposter
-                    ? 'Hint: ${card.payload['hint']}'
-                    : 'Word: ${card.payload['word']}',
-                style: AppTypography.body.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2);
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/round_repository.dart';
 import '../../data/repositories/vote_repository.dart';
+import '../../data/repositories/skip_vote_repository.dart';
 import '../../data/services/supabase_service.dart';
 
 final roundRepositoryProvider = Provider<RoundRepository>((ref) {
@@ -11,6 +12,10 @@ final roundRepositoryProvider = Provider<RoundRepository>((ref) {
 
 final voteRepositoryProvider = Provider<VoteRepository>((ref) {
   return VoteRepository();
+});
+
+final skipVoteRepositoryProvider = Provider<SkipVoteRepository>((ref) {
+  return SkipVoteRepository();
 });
 
 // Game phases
@@ -33,6 +38,12 @@ final roundStreamProvider = StreamProvider.family<Round?, String>((ref, roundId)
 final votesStreamProvider = StreamProvider.family<List<Vote>, String>((ref, roundId) {
   final repository = ref.watch(voteRepositoryProvider);
   return repository.watchVotes(roundId);
+});
+
+// Skip votes for a round
+final skipVotesStreamProvider = StreamProvider.family<List<SkipVote>, String>((ref, roundId) {
+  final repository = ref.watch(skipVoteRepositoryProvider);
+  return repository.watchSkipVotes(roundId);
 });
 
 // My card for current round
