@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/models.dart';
@@ -43,10 +44,10 @@ class VoteCard extends StatelessWidget {
         onTap: isDisabled ? null : onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             gradient: gradient,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: borderColor,
               width: isSelected || (showResult && isImposter) ? 2 : 1,
@@ -55,8 +56,8 @@ class VoteCard extends StatelessWidget {
                 ? [
                     BoxShadow(
                       color: AppColors.orange.withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      blurRadius: 12.r,
+                      offset: Offset(0, 4.h),
                     ),
                   ]
                 : null,
@@ -79,14 +80,14 @@ class VoteCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (showResult && isImposter) ...[
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8.h),
+                Text(
                   '😈',
-                  style: TextStyle(fontSize: 24),
+                  style: TextStyle(fontSize: 24.sp),
                 ),
               ],
               if (voteCount != null) ...[
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Text(
                   '$voteCount vote${voteCount == 1 ? '' : 's'}',
                   style: AppTypography.caption.copyWith(

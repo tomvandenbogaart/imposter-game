@@ -24,6 +24,19 @@ mixin _$WordPack {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String get language => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_premium')
+  bool get isPremium => throw _privateConstructorUsedError;
+  String? get category => throw _privateConstructorUsedError;
+  @JsonKey(name: 'icon_name')
+  String? get iconName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'sort_order')
+  int get sortOrder => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_seasonal')
+  bool get isSeasonal => throw _privateConstructorUsedError;
+  @JsonKey(name: 'available_from')
+  DateTime? get availableFrom => throw _privateConstructorUsedError;
+  @JsonKey(name: 'available_until')
+  DateTime? get availableUntil => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
@@ -46,6 +59,13 @@ abstract class $WordPackCopyWith<$Res> {
     String id,
     String name,
     String language,
+    @JsonKey(name: 'is_premium') bool isPremium,
+    String? category,
+    @JsonKey(name: 'icon_name') String? iconName,
+    @JsonKey(name: 'sort_order') int sortOrder,
+    @JsonKey(name: 'is_seasonal') bool isSeasonal,
+    @JsonKey(name: 'available_from') DateTime? availableFrom,
+    @JsonKey(name: 'available_until') DateTime? availableUntil,
     @JsonKey(name: 'created_at') DateTime? createdAt,
   });
 }
@@ -68,6 +88,13 @@ class _$WordPackCopyWithImpl<$Res, $Val extends WordPack>
     Object? id = null,
     Object? name = null,
     Object? language = null,
+    Object? isPremium = null,
+    Object? category = freezed,
+    Object? iconName = freezed,
+    Object? sortOrder = null,
+    Object? isSeasonal = null,
+    Object? availableFrom = freezed,
+    Object? availableUntil = freezed,
     Object? createdAt = freezed,
   }) {
     return _then(
@@ -84,6 +111,34 @@ class _$WordPackCopyWithImpl<$Res, $Val extends WordPack>
                 ? _value.language
                 : language // ignore: cast_nullable_to_non_nullable
                       as String,
+            isPremium: null == isPremium
+                ? _value.isPremium
+                : isPremium // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            category: freezed == category
+                ? _value.category
+                : category // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            iconName: freezed == iconName
+                ? _value.iconName
+                : iconName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            sortOrder: null == sortOrder
+                ? _value.sortOrder
+                : sortOrder // ignore: cast_nullable_to_non_nullable
+                      as int,
+            isSeasonal: null == isSeasonal
+                ? _value.isSeasonal
+                : isSeasonal // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            availableFrom: freezed == availableFrom
+                ? _value.availableFrom
+                : availableFrom // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            availableUntil: freezed == availableUntil
+                ? _value.availableUntil
+                : availableUntil // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
             createdAt: freezed == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -107,6 +162,13 @@ abstract class _$$WordPackImplCopyWith<$Res>
     String id,
     String name,
     String language,
+    @JsonKey(name: 'is_premium') bool isPremium,
+    String? category,
+    @JsonKey(name: 'icon_name') String? iconName,
+    @JsonKey(name: 'sort_order') int sortOrder,
+    @JsonKey(name: 'is_seasonal') bool isSeasonal,
+    @JsonKey(name: 'available_from') DateTime? availableFrom,
+    @JsonKey(name: 'available_until') DateTime? availableUntil,
     @JsonKey(name: 'created_at') DateTime? createdAt,
   });
 }
@@ -128,6 +190,13 @@ class __$$WordPackImplCopyWithImpl<$Res>
     Object? id = null,
     Object? name = null,
     Object? language = null,
+    Object? isPremium = null,
+    Object? category = freezed,
+    Object? iconName = freezed,
+    Object? sortOrder = null,
+    Object? isSeasonal = null,
+    Object? availableFrom = freezed,
+    Object? availableUntil = freezed,
     Object? createdAt = freezed,
   }) {
     return _then(
@@ -144,6 +213,34 @@ class __$$WordPackImplCopyWithImpl<$Res>
             ? _value.language
             : language // ignore: cast_nullable_to_non_nullable
                   as String,
+        isPremium: null == isPremium
+            ? _value.isPremium
+            : isPremium // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        category: freezed == category
+            ? _value.category
+            : category // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        iconName: freezed == iconName
+            ? _value.iconName
+            : iconName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        sortOrder: null == sortOrder
+            ? _value.sortOrder
+            : sortOrder // ignore: cast_nullable_to_non_nullable
+                  as int,
+        isSeasonal: null == isSeasonal
+            ? _value.isSeasonal
+            : isSeasonal // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        availableFrom: freezed == availableFrom
+            ? _value.availableFrom
+            : availableFrom // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        availableUntil: freezed == availableUntil
+            ? _value.availableUntil
+            : availableUntil // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
         createdAt: freezed == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -160,6 +257,13 @@ class _$WordPackImpl implements _WordPack {
     required this.id,
     required this.name,
     this.language = 'en',
+    @JsonKey(name: 'is_premium') this.isPremium = false,
+    this.category,
+    @JsonKey(name: 'icon_name') this.iconName,
+    @JsonKey(name: 'sort_order') this.sortOrder = 0,
+    @JsonKey(name: 'is_seasonal') this.isSeasonal = false,
+    @JsonKey(name: 'available_from') this.availableFrom,
+    @JsonKey(name: 'available_until') this.availableUntil,
     @JsonKey(name: 'created_at') this.createdAt,
   });
 
@@ -174,12 +278,32 @@ class _$WordPackImpl implements _WordPack {
   @JsonKey()
   final String language;
   @override
+  @JsonKey(name: 'is_premium')
+  final bool isPremium;
+  @override
+  final String? category;
+  @override
+  @JsonKey(name: 'icon_name')
+  final String? iconName;
+  @override
+  @JsonKey(name: 'sort_order')
+  final int sortOrder;
+  @override
+  @JsonKey(name: 'is_seasonal')
+  final bool isSeasonal;
+  @override
+  @JsonKey(name: 'available_from')
+  final DateTime? availableFrom;
+  @override
+  @JsonKey(name: 'available_until')
+  final DateTime? availableUntil;
+  @override
   @JsonKey(name: 'created_at')
   final DateTime? createdAt;
 
   @override
   String toString() {
-    return 'WordPack(id: $id, name: $name, language: $language, createdAt: $createdAt)';
+    return 'WordPack(id: $id, name: $name, language: $language, isPremium: $isPremium, category: $category, iconName: $iconName, sortOrder: $sortOrder, isSeasonal: $isSeasonal, availableFrom: $availableFrom, availableUntil: $availableUntil, createdAt: $createdAt)';
   }
 
   @override
@@ -191,13 +315,40 @@ class _$WordPackImpl implements _WordPack {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.language, language) ||
                 other.language == language) &&
+            (identical(other.isPremium, isPremium) ||
+                other.isPremium == isPremium) &&
+            (identical(other.category, category) ||
+                other.category == category) &&
+            (identical(other.iconName, iconName) ||
+                other.iconName == iconName) &&
+            (identical(other.sortOrder, sortOrder) ||
+                other.sortOrder == sortOrder) &&
+            (identical(other.isSeasonal, isSeasonal) ||
+                other.isSeasonal == isSeasonal) &&
+            (identical(other.availableFrom, availableFrom) ||
+                other.availableFrom == availableFrom) &&
+            (identical(other.availableUntil, availableUntil) ||
+                other.availableUntil == availableUntil) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, language, createdAt);
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    name,
+    language,
+    isPremium,
+    category,
+    iconName,
+    sortOrder,
+    isSeasonal,
+    availableFrom,
+    availableUntil,
+    createdAt,
+  );
 
   /// Create a copy of WordPack
   /// with the given fields replaced by the non-null parameter values.
@@ -218,6 +369,13 @@ abstract class _WordPack implements WordPack {
     required final String id,
     required final String name,
     final String language,
+    @JsonKey(name: 'is_premium') final bool isPremium,
+    final String? category,
+    @JsonKey(name: 'icon_name') final String? iconName,
+    @JsonKey(name: 'sort_order') final int sortOrder,
+    @JsonKey(name: 'is_seasonal') final bool isSeasonal,
+    @JsonKey(name: 'available_from') final DateTime? availableFrom,
+    @JsonKey(name: 'available_until') final DateTime? availableUntil,
     @JsonKey(name: 'created_at') final DateTime? createdAt,
   }) = _$WordPackImpl;
 
@@ -230,6 +388,26 @@ abstract class _WordPack implements WordPack {
   String get name;
   @override
   String get language;
+  @override
+  @JsonKey(name: 'is_premium')
+  bool get isPremium;
+  @override
+  String? get category;
+  @override
+  @JsonKey(name: 'icon_name')
+  String? get iconName;
+  @override
+  @JsonKey(name: 'sort_order')
+  int get sortOrder;
+  @override
+  @JsonKey(name: 'is_seasonal')
+  bool get isSeasonal;
+  @override
+  @JsonKey(name: 'available_from')
+  DateTime? get availableFrom;
+  @override
+  @JsonKey(name: 'available_until')
+  DateTime? get availableUntil;
   @override
   @JsonKey(name: 'created_at')
   DateTime? get createdAt;

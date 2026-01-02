@@ -16,6 +16,8 @@ import '../../presentation/screens/local_game/local_voting_screen.dart';
 import '../../presentation/screens/local_game/local_results_screen.dart';
 import '../../presentation/screens/local_game/local_final_results_screen.dart';
 import '../../presentation/screens/local_game/local_settings_screen.dart';
+import '../../presentation/screens/local_game/local_word_packs_screen.dart';
+import '../../presentation/screens/store/store_screen.dart';
 
 class AppRouter {
   static final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -29,6 +31,11 @@ class AppRouter {
         path: '/',
         name: 'welcome',
         builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/store',
+        name: 'store',
+        builder: (context, state) => const StoreScreen(),
       ),
       GoRoute(
         path: '/join',
@@ -93,6 +100,11 @@ class AppRouter {
         path: '/local/settings',
         name: 'localSettings',
         builder: (context, state) => const LocalSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/local/packs',
+        name: 'localWordPacks',
+        builder: (context, state) => const LocalWordPacksScreen(),
       ),
       GoRoute(
         path: '/local/privacy',

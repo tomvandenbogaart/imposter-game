@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/models.dart';
@@ -80,7 +82,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(context.screenPadding),
           child: Column(
             children: [
               Text(
@@ -88,14 +90,14 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                 style: AppTypography.h1,
               ).animate().fadeIn(duration: 400.ms),
 
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
 
               Text(
                 hasVoted ? 'Waiting for others...' : 'Vote for the imposter',
                 style: AppTypography.bodySmall,
               ).animate().fadeIn(delay: 200.ms),
 
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
 
               // Vote Progress
               roomAsync.when(
@@ -110,17 +112,17 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                 error: (_, __) => const SizedBox.shrink(),
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
 
               // Player Grid for voting
               Expanded(
                 child: playersAsync.when(
                   data: (players) => GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 1.2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: context.votingGridColumns,
+                      childAspectRatio: context.isTablet ? 1.0 : 1.2,
+                      crossAxisSpacing: 12.w,
+                      mainAxisSpacing: 12.h,
                     ),
                     itemCount: players.length,
                     itemBuilder: (context, index) {
@@ -147,7 +149,7 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
 
               // Submit Vote Button
               if (!hasVoted)
@@ -155,21 +157,21 @@ class _VotingScreenState extends ConsumerState<VotingScreen> {
                   onTap: _selectedPlayerId != null ? _submitVote : null,
                   child: Container(
                     width: double.infinity,
-                    height: 56,
+                    height: 56.h,
                     decoration: BoxDecoration(
                       gradient: _selectedPlayerId != null
                           ? AppColors.primaryGradient
                           : null,
                       color: _selectedPlayerId == null ? AppColors.surfaceLight : null,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Center(
                       child: voteState.isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
+                          ? SizedBox(
+                              width: 24.w,
+                              height: 24.h,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                                strokeWidth: 2.w,
                                 color: AppColors.background,
                               ),
                             )
@@ -220,14 +222,14 @@ class _VoteProgress extends ConsumerWidget {
               '$voteCount / $totalPlayers votes',
               style: AppTypography.bodySmall,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               child: LinearProgressIndicator(
                 value: progress,
                 backgroundColor: AppColors.surfaceLight,
                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.cyan),
-                minHeight: 8,
+                minHeight: 8.h,
               ),
             ),
           ],
@@ -259,11 +261,11 @@ class _VoteCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           gradient: isSelected ? AppColors.primaryGradient : null,
           color: isSelected ? null : AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
             color: isSelected
                 ? AppColors.cyan
@@ -277,13 +279,13 @@ class _VoteCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 56.w,
+              height: 56.h,
               decoration: BoxDecoration(
                 color: isSelected
                     ? Colors.white.withValues(alpha: 0.2)
                     : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
               ),
               child: Center(
                 child: Text(
@@ -294,7 +296,7 @@ class _VoteCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             Text(
               player.displayName,
               style: AppTypography.playerName.copyWith(

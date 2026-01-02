@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../providers/local_game_provider.dart';
-import '../../providers/word_pack_provider.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../widgets/buttons/secondary_button.dart';
 import '../../widgets/local_game/player_name_input.dart';
+import '../../widgets/word_pack/word_pack_selector.dart';
 
 class LocalSetupScreen extends ConsumerStatefulWidget {
   const LocalSetupScreen({super.key});
@@ -35,7 +36,7 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
   void _addPlayer() {
     final state = ref.read(localGameProvider);
     if (state.players.length >= 12) return;
-    ref.read(localGameProvider.notifier).addPlayer('Player ${state.players.length + 1}');
+    ref.read(localGameProvider.notifier).addPlayer(context.l10n.localSetup_defaultPlayerName(state.players.length + 1));
   }
 
   void _removePlayer(String playerId) {
@@ -57,7 +58,7 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
     for (final player in state.players) {
       if (player.name.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All players must have a name')),
+          SnackBar(content: Text(context.l10n.error_allPlayersNeedName)),
         );
         return;
       }
@@ -65,7 +66,7 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
 
     if (state.players.length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('At least 3 players required')),
+        SnackBar(content: Text(context.l10n.error_minPlayers)),
       );
       return;
     }
@@ -78,13 +79,13 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
         context.go('/local/privacy');
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not load words. Check your connection.')),
+          SnackBar(content: Text(context.l10n.error_loadWords)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(context.l10n.error_generic(e.toString()))),
         );
       }
     } finally {
@@ -97,7 +98,6 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final gameState = ref.watch(localGameProvider);
-    final wordPacksAsync = ref.watch(wordPacksProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -112,9 +112,15 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
           },
         ),
         title: Text(
-          'Local Game',
+          context.l10n.localSetup_title,
           style: AppTypography.h2,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_rounded, color: AppColors.textPrimary),
+            onPressed: () => context.push('/local/settings'),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -130,11 +136,11 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Players',
+                          context.l10n.localSetup_players_header,
                           style: AppTypography.h3,
                         ).animate().fadeIn(duration: 400.ms),
                         Text(
-                          '${gameState.players.length}/12',
+                          context.l10n.localSetup_playerCount(gameState.players.length),
                           style: AppTypography.bodySmall,
                         ).animate().fadeIn(duration: 400.ms),
                       ],
@@ -169,6 +175,7 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
                             onChanged: (name) => _updatePlayerName(player.id, name),
                             onRemove: () => _removePlayer(player.id),
                             canRemove: gameState.players.length > 3,
+                            showDragHandle: false,
                           );
                         },
                       ),
@@ -179,30 +186,17 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
                     // Add player button
                     if (gameState.players.length < 12)
                       SecondaryButton(
-                        label: 'Add Player',
+                        label: context.l10n.localSetup_addPlayer_button,
                         icon: Icons.person_add_rounded,
                         onPressed: _addPlayer,
                       ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
 
                     const SizedBox(height: 24),
 
-                    // Settings button
-                    _SettingsButton(
-                      timerDuration: gameState.settings.timerDuration,
-                      packName: wordPacksAsync.whenOrNull(
-                        data: (packs) {
-                          if (gameState.settings.selectedPackId == null) {
-                            return 'Random';
-                          }
-                          return packs
-                              .where((p) => p.id == gameState.settings.selectedPackId)
-                              .map((p) => p.name)
-                              .firstOrNull ?? 'Random';
-                        },
-                      ) ?? 'Loading...',
-                      numberOfRounds: gameState.settings.numberOfRounds,
-                      onTap: () => context.push('/local/settings'),
-                    ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
+                    // Word pack selector
+                    WordPackSelector(
+                      onViewAll: () => context.push('/local/packs'),
+                    ).animate().fadeIn(delay: 350.ms, duration: 400.ms),
 
                     const SizedBox(height: 24),
                   ],
@@ -214,81 +208,11 @@ class _LocalSetupScreenState extends ConsumerState<LocalSetupScreen> {
             Padding(
               padding: const EdgeInsets.all(24),
               child: PrimaryButton(
-                label: 'Start Round',
+                label: context.l10n.localSetup_startRound_button,
                 icon: Icons.play_arrow_rounded,
                 onPressed: _isStarting ? null : _startRound,
                 isLoading: _isStarting,
               ).animate().fadeIn(delay: 900.ms, duration: 400.ms),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsButton extends StatelessWidget {
-  final int timerDuration;
-  final String packName;
-  final int numberOfRounds;
-  final VoidCallback onTap;
-
-  const _SettingsButton({
-    required this.timerDuration,
-    required this.packName,
-    required this.numberOfRounds,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final timerString = '${timerDuration ~/ 60}:${(timerDuration % 60).toString().padLeft(2, '0')}';
-    final roundsText = numberOfRounds == 1 ? '1 round' : '$numberOfRounds rounds';
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppColors.surfaceLight,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.settings_rounded,
-                color: AppColors.cyan,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Settings', style: AppTypography.playerName),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$roundsText · $timerString timer · $packName',
-                    style: AppTypography.caption,
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textMuted,
             ),
           ],
         ),

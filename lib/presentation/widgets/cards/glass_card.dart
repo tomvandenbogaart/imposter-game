@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 
 class GlassCard extends StatelessWidget {
@@ -26,7 +27,7 @@ class GlassCard extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         gradient: gradient ?? AppColors.surfaceGradient,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         border: Border.all(
           color: AppColors.surfaceLight.withValues(alpha: 0.5),
           width: 1,
@@ -34,8 +35,8 @@ class GlassCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: 20.r,
+            offset: Offset(0, 10.h),
           ),
         ],
       ),
@@ -43,9 +44,9 @@ class GlassCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(24.r),
           child: Padding(
-            padding: padding ?? const EdgeInsets.all(24),
+            padding: padding ?? EdgeInsets.all(24.w),
             child: child,
           ),
         ),

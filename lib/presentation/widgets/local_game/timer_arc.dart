@@ -1,30 +1,34 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 
 class TimerArc extends StatelessWidget {
   final double progress;
-  final double size;
-  final double strokeWidth;
+  final double? size;
+  final double? strokeWidth;
   final bool isUrgent;
 
   const TimerArc({
     super.key,
     required this.progress,
-    this.size = 200,
-    this.strokeWidth = 12,
+    this.size,
+    this.strokeWidth,
     this.isUrgent = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveSize = size ?? 200.w;
+    final effectiveStrokeWidth = strokeWidth ?? 12.w;
+
     return SizedBox(
-      width: size,
-      height: size,
+      width: effectiveSize,
+      height: effectiveSize,
       child: CustomPaint(
         painter: _TimerArcPainter(
           progress: progress,
-          strokeWidth: strokeWidth,
+          strokeWidth: effectiveStrokeWidth,
           isUrgent: isUrgent,
         ),
       ),

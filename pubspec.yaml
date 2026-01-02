@@ -10,6 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Localization
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+
   # State Management
   flutter_riverpod: ^2.5.1
   riverpod_annotation: ^2.3.5
@@ -38,6 +43,16 @@ dependencies:
   # UI Enhancements
   google_fonts: ^6.2.1
   confetti: ^0.7.0
+  flutter_screenutil: ^5.9.0
+
+  # In-App Purchases
+  in_app_purchase: ^3.2.0
+
+  # Ads
+  google_mobile_ads: ^5.1.0
+
+  # Local Storage (for caching entitlements)
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:
@@ -61,6 +76,7 @@ flutter_launcher_icons:
   adaptive_icon_background: "#1A0A2E"
 
 flutter:
+  generate: true
   uses-material-design: true
 
   assets:

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/models.dart';
@@ -52,7 +53,9 @@ class LocalPrivacyScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      isVotingPhase ? 'Vote' : 'Player',
+                      isVotingPhase
+                          ? context.l10n.privacy_vote_label
+                          : context.l10n.privacy_player_label,
                       style: AppTypography.bodySmall,
                     ),
                     const SizedBox(width: 8),
@@ -66,7 +69,7 @@ class LocalPrivacyScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '$progress / $total',
+                        context.l10n.privacy_progress(progress, total),
                         style: AppTypography.buttonSmall.copyWith(
                           color: AppColors.cyan,
                         ),
@@ -79,7 +82,7 @@ class LocalPrivacyScreen extends ConsumerWidget {
 
                 // Pass to message
                 Text(
-                  'Pass the phone to',
+                  context.l10n.privacy_passPhoneTo,
                   style: AppTypography.bodyLarge.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -101,8 +104,8 @@ class LocalPrivacyScreen extends ConsumerWidget {
 
                 Text(
                   isVotingPhase
-                      ? 'to cast their vote'
-                      : 'to see their role',
+                      ? context.l10n.privacy_toCastVote
+                      : context.l10n.privacy_toSeeRole,
                   style: AppTypography.bodySmall,
                 ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
 
@@ -127,7 +130,7 @@ class LocalPrivacyScreen extends ConsumerWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Make sure only ${currentPlayer.name} can see the screen',
+                          context.l10n.privacy_ensurePrivacy(currentPlayer.name),
                           style: AppTypography.bodySmall,
                         ),
                       ),
@@ -140,7 +143,7 @@ class LocalPrivacyScreen extends ConsumerWidget {
                 // Continue button
                 if (gameState.settings.revealProtection)
                   HoldToConfirmButton(
-                    label: 'Hold to Continue',
+                    label: context.l10n.privacy_holdToContinue_button,
                     holdDuration: const Duration(milliseconds: 1000),
                     hapticFeedback: gameState.settings.hapticFeedback,
                     onConfirmed: () {
@@ -153,7 +156,7 @@ class LocalPrivacyScreen extends ConsumerWidget {
                   ).animate().fadeIn(delay: 600.ms, duration: 400.ms)
                 else
                   PrimaryButton(
-                    label: 'Continue',
+                    label: context.l10n.privacy_continue_button,
                     icon: Icons.arrow_forward_rounded,
                     onPressed: () {
                       if (isVotingPhase) {

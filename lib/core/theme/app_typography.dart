@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
@@ -10,7 +11,7 @@ class AppTypography {
   // Display styles
   static TextStyle get display => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 48,
+        fontSize: 48.sp,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         letterSpacing: -1,
@@ -18,7 +19,7 @@ class AppTypography {
 
   static TextStyle get displaySmall => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 36,
+        fontSize: 36.sp,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         letterSpacing: -0.5,
@@ -27,21 +28,21 @@ class AppTypography {
   // Heading styles
   static TextStyle get h1 => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 28,
+        fontSize: 28.sp,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       );
 
   static TextStyle get h2 => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 24,
+        fontSize: 24.sp,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       );
 
   static TextStyle get h3 => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 20,
+        fontSize: 20.sp,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       );
@@ -49,21 +50,21 @@ class AppTypography {
   // Body styles
   static TextStyle get bodyLarge => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 18,
+        fontSize: 18.sp,
         fontWeight: FontWeight.w400,
         color: AppColors.textPrimary,
       );
 
   static TextStyle get body => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 16,
+        fontSize: 16.sp,
         fontWeight: FontWeight.w400,
         color: AppColors.textPrimary,
       );
 
   static TextStyle get bodySmall => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 14,
+        fontSize: 14.sp,
         fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
       );
@@ -71,7 +72,7 @@ class AppTypography {
   // Special styles
   static TextStyle get button => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 16,
+        fontSize: 16.sp,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         letterSpacing: 0.5,
@@ -79,14 +80,14 @@ class AppTypography {
 
   static TextStyle get buttonSmall => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 14,
+        fontSize: 14.sp,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       );
 
   static TextStyle get caption => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 12,
+        fontSize: 12.sp,
         fontWeight: FontWeight.w400,
         color: AppColors.textMuted,
       );
@@ -94,7 +95,7 @@ class AppTypography {
   // Game specific styles
   static TextStyle get timer => TextStyle(
         fontFamily: GoogleFonts.orbitron().fontFamily,
-        fontSize: 64,
+        fontSize: 64.sp,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         letterSpacing: 4,
@@ -102,7 +103,7 @@ class AppTypography {
 
   static TextStyle get roomCode => TextStyle(
         fontFamily: GoogleFonts.orbitron().fontFamily,
-        fontSize: 32,
+        fontSize: 32.sp,
         fontWeight: FontWeight.w600,
         color: AppColors.cyan,
         letterSpacing: 8,
@@ -110,21 +111,21 @@ class AppTypography {
 
   static TextStyle get cardTitle => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 24,
+        fontSize: 24.sp,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
       );
 
   static TextStyle get cardWord => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 32,
+        fontSize: 32.sp,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
       );
 
   static TextStyle get hint => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 16,
+        fontSize: 16.sp,
         fontWeight: FontWeight.w400,
         fontStyle: FontStyle.italic,
         color: AppColors.textSecondary,
@@ -132,7 +133,7 @@ class AppTypography {
 
   static TextStyle get playerName => TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 16,
+        fontSize: 16.sp,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
       );

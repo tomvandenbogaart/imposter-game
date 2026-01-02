@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../providers/local_game_provider.dart';
@@ -94,7 +96,7 @@ class _LocalCardRevealScreenState extends ConsumerState<LocalCardRevealScreen> {
         backgroundColor: AppColors.background,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(context.screenPadding),
             child: Column(
               children: [
                 // Header
@@ -103,10 +105,12 @@ class _LocalCardRevealScreenState extends ConsumerState<LocalCardRevealScreen> {
                   style: AppTypography.h2,
                 ).animate().fadeIn(duration: 400.ms),
 
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
 
                 Text(
-                  _isRevealed ? 'Your Role' : 'Tap the card to reveal',
+                  _isRevealed
+                      ? context.l10n.cardReveal_yourRole
+                      : context.l10n.cardReveal_tapToReveal,
                   style: AppTypography.bodySmall,
                 ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
@@ -114,8 +118,8 @@ class _LocalCardRevealScreenState extends ConsumerState<LocalCardRevealScreen> {
 
                 // Flip card
                 SizedBox(
-                  width: 280,
-                  height: 400,
+                  width: context.cardWidth,
+                  height: context.cardHeight,
                   child: FlipCard(
                     isFlipped: _isRevealed,
                     onFlip: _isRevealed ? null : _revealCard,
@@ -124,7 +128,7 @@ class _LocalCardRevealScreenState extends ConsumerState<LocalCardRevealScreen> {
                       word: word,
                       hint: hint,
                     ),
-                    back: const _HiddenCard(),
+                    back: _HiddenCard(),
                   ),
                 ).animate().fadeIn(delay: 300.ms, duration: 600.ms),
 
@@ -135,7 +139,7 @@ class _LocalCardRevealScreenState extends ConsumerState<LocalCardRevealScreen> {
                   opacity: _isRevealed ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 300),
                   child: PrimaryButton(
-                    label: 'Hide Card',
+                    label: context.l10n.cardReveal_hideCard_button,
                     icon: Icons.visibility_off_rounded,
                     onPressed: _isRevealed ? _hideCard : null,
                   ),
@@ -150,14 +154,12 @@ class _LocalCardRevealScreenState extends ConsumerState<LocalCardRevealScreen> {
 }
 
 class _HiddenCard extends StatelessWidget {
-  const _HiddenCard();
-
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: AppColors.surfaceGradient,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         border: Border.all(
           color: AppColors.surfaceLight,
           width: 2,
@@ -165,30 +167,30 @@ class _HiddenCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: AppColors.cyan.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: 20.r,
+            offset: Offset(0, 10.h),
           ),
         ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.touch_app_rounded,
-            size: 64,
+            size: 64.sp,
             color: AppColors.cyan,
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           Text(
-            'TAP TO REVEAL',
+            context.l10n.cardReveal_tapToReveal_card,
             style: AppTypography.h3.copyWith(
               color: AppColors.cyan,
               letterSpacing: 2,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
-            'Your role awaits',
+            context.l10n.cardReveal_roleAwaits,
             style: AppTypography.bodySmall,
           ),
         ],
@@ -212,11 +214,11 @@ class _RevealedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return isImposter ? _buildImposterCard() : _buildWordCard();
+    return isImposter ? _buildImposterCard(context) : _buildWordCard(context);
   }
 
   /// Innocent card - Beige parchment style with golden border
-  Widget _buildWordCard() {
+  Widget _buildWordCard(BuildContext context) {
     const parchmentLight = Color(0xFFF5E6C8);
     const parchmentDark = Color(0xFFE8D4A8);
     const borderGold = Color(0xFFD4A030);
@@ -224,33 +226,33 @@ class _RevealedCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
             color: borderGold.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            blurRadius: 20.r,
+            offset: Offset(0, 8.h),
           ),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 12),
+            blurRadius: 16.r,
+            offset: Offset(0, 12.h),
           ),
         ],
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [borderOrange, borderGold, borderOrange],
           ),
         ),
-        padding: const EdgeInsets.all(6),
+        padding: EdgeInsets.all(6.w),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -261,29 +263,29 @@ class _RevealedCard extends StatelessWidget {
             children: [
               // Corner decorations
               Positioned(
-                top: 8,
-                left: 8,
+                top: 8.h,
+                left: 8.w,
                 child: _buildCornerDecoration(),
               ),
               Positioned(
-                top: 8,
-                right: 8,
+                top: 8.h,
+                right: 8.w,
                 child: Transform.flip(
                   flipX: true,
                   child: _buildCornerDecoration(),
                 ),
               ),
               Positioned(
-                bottom: 8,
-                left: 8,
+                bottom: 8.h,
+                left: 8.w,
                 child: Transform.flip(
                   flipY: true,
                   child: _buildCornerDecoration(),
                 ),
               ),
               Positioned(
-                bottom: 8,
-                right: 8,
+                bottom: 8.h,
+                right: 8.w,
                 child: Transform.flip(
                   flipX: true,
                   flipY: true,
@@ -293,25 +295,25 @@ class _RevealedCard extends StatelessWidget {
               // Main content
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24.w),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Word display
                       Text(
-                        word ?? 'Unknown',
+                        word ?? context.l10n.cardReveal_unknown,
                         style: AppTypography.h1.copyWith(
                           color: const Color(0xFF2D1B0E),
-                          fontSize: 32,
+                          fontSize: 32.sp,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16.h),
                       // Instructions
                       Text(
-                        'Find the imposter!',
+                        context.l10n.cardReveal_findImposter,
                         style: AppTypography.caption.copyWith(
                           color: const Color(0xFF5D4830),
                           fontWeight: FontWeight.w500,
@@ -331,8 +333,8 @@ class _RevealedCard extends StatelessWidget {
 
   Widget _buildCornerDecoration() {
     return Container(
-      width: 24,
-      height: 24,
+      width: 24.w,
+      height: 24.h,
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(color: const Color(0xFFD4A030).withValues(alpha: 0.6), width: 2),
@@ -343,7 +345,7 @@ class _RevealedCard extends StatelessWidget {
   }
 
   /// Imposter card - Dark fiery style with glowing red border
-  Widget _buildImposterCard() {
+  Widget _buildImposterCard(BuildContext context) {
     const darkCore = Color(0xFF1A0A0A);
     const darkEdge = Color(0xFF2D0A0A);
     const glowRed = Color(0xFFE83030);
@@ -351,24 +353,24 @@ class _RevealedCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           // Outer red glow
           BoxShadow(
             color: glowRed.withValues(alpha: 0.6),
-            blurRadius: 30,
+            blurRadius: 30.r,
             spreadRadius: 2,
           ),
           // Inner orange glow
           BoxShadow(
             color: glowOrange.withValues(alpha: 0.3),
-            blurRadius: 20,
+            blurRadius: 20.r,
           ),
         ],
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -379,10 +381,10 @@ class _RevealedCard extends StatelessWidget {
             ],
           ),
         ),
-        padding: const EdgeInsets.all(4),
+        padding: EdgeInsets.all(4.w),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(18.r),
             gradient: const RadialGradient(
               center: Alignment.center,
               radius: 1.2,
@@ -395,7 +397,7 @@ class _RevealedCard extends StatelessWidget {
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(18.r),
                     gradient: RadialGradient(
                       center: Alignment.topCenter,
                       radius: 1.5,
@@ -410,67 +412,67 @@ class _RevealedCard extends StatelessWidget {
               // Main content
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24.w),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Imposter title
                       Text(
-                        'IMPOSTER',
+                        context.l10n.cardReveal_imposter_title,
                         style: AppTypography.h2.copyWith(
                           color: glowRed,
-                          fontSize: 24,
+                          fontSize: 24.sp,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 4,
                           shadows: [
                             Shadow(
                               color: glowRed.withValues(alpha: 0.8),
-                              blurRadius: 12,
+                              blurRadius: 12.r,
                             ),
                             Shadow(
                               color: glowOrange.withValues(alpha: 0.5),
-                              blurRadius: 20,
+                              blurRadius: 20.r,
                             ),
                           ],
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20.h),
                       // Hint label
                       Text(
-                        'Your hint:',
+                        context.l10n.cardReveal_yourHint,
                         style: AppTypography.caption.copyWith(
                           color: Colors.white.withValues(alpha: 0.6),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8.h),
                       // Hint display
                       Text(
-                        hint ?? 'No hint',
+                        hint ?? context.l10n.cardReveal_noHint,
                         style: AppTypography.h2.copyWith(
                           color: Colors.white,
-                          fontSize: 28,
+                          fontSize: 28.sp,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       // Instructions
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 8.h,
                         ),
                         decoration: BoxDecoration(
                           color: glowRed.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(8.r),
                           border: Border.all(
                             color: glowRed.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(
-                          'Blend in! Pretend you know the word.',
+                          context.l10n.cardReveal_blendIn,
                           style: AppTypography.caption.copyWith(
                             color: Colors.white.withValues(alpha: 0.9),
                             fontWeight: FontWeight.w500,

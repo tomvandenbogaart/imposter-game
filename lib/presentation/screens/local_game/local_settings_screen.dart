@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../providers/local_game_provider.dart';
-import '../../providers/word_pack_provider.dart';
+import '../../providers/locale_provider.dart';
 
 class LocalSettingsScreen extends ConsumerWidget {
   const LocalSettingsScreen({super.key});
@@ -13,19 +14,21 @@ class LocalSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gameState = ref.watch(localGameProvider);
-    final wordPacksAsync = ref.watch(wordPacksProvider);
+    final currentLocale = ref.watch(localeProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Settings',
+          context.l10n.localSettings_title,
           style: AppTypography.h2,
         ),
       ),
@@ -37,7 +40,7 @@ class LocalSettingsScreen extends ConsumerWidget {
             children: [
               // Number of rounds
               _SettingsCard(
-                title: 'Number of Rounds',
+                title: context.l10n.localSettings_numberOfRounds,
                 value: '${gameState.settings.numberOfRounds}',
                 child: Slider(
                   value: gameState.settings.numberOfRounds.toDouble(),
@@ -56,7 +59,7 @@ class LocalSettingsScreen extends ConsumerWidget {
 
               // Timer duration
               _SettingsCard(
-                title: 'Discussion Time',
+                title: context.l10n.localSettings_discussionTime,
                 value: '${gameState.settings.timerDuration ~/ 60}:${(gameState.settings.timerDuration % 60).toString().padLeft(2, '0')}',
                 child: Slider(
                   value: gameState.settings.timerDuration.toDouble(),
@@ -73,93 +76,96 @@ class LocalSettingsScreen extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // Word pack selection
-              _SettingsCard(
-                title: 'Word Pack',
-                value: '',
-                child: wordPacksAsync.when(
-                  data: (packs) => DropdownButton<String>(
-                    value: gameState.settings.selectedPackId,
-                    isExpanded: true,
-                    underline: const SizedBox(),
-                    dropdownColor: AppColors.surface,
-                    style: AppTypography.body,
-                    hint: Text(
-                      'Select a pack',
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    items: [
-                      DropdownMenuItem<String>(
-                        value: null,
-                        child: Text(
-                          'Random (All Packs)',
-                          style: AppTypography.body,
-                        ),
-                      ),
-                      ...packs.map((pack) => DropdownMenuItem(
-                        value: pack.id,
-                        child: Text(
-                          pack.name,
-                          style: AppTypography.body,
-                        ),
-                      )),
-                    ],
-                    onChanged: (value) {
-                      ref.read(localGameProvider.notifier).setSelectedPack(value);
-                    },
-                  ),
-                  loading: () => const Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                  error: (e, _) => Text(
-                    'Failed to load packs',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.error,
-                    ),
-                  ),
-                ),
-              ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
-
-              const SizedBox(height: 16),
-
               // Reveal protection toggle
               _SettingsToggle(
-                title: 'Reveal Protection',
-                subtitle: 'Require hold to reveal cards',
+                title: context.l10n.localSettings_revealProtection_title,
+                subtitle: context.l10n.localSettings_revealProtection_subtitle,
                 value: gameState.settings.revealProtection,
                 onChanged: (value) {
                   ref.read(localGameProvider.notifier).setRevealProtection(value);
                 },
-              ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+              ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
               const SizedBox(height: 16),
 
               // Allow pause toggle
               _SettingsToggle(
-                title: 'Allow Pause',
-                subtitle: 'Enable pause during discussion',
+                title: context.l10n.localSettings_allowPause_title,
+                subtitle: context.l10n.localSettings_allowPause_subtitle,
                 value: gameState.settings.allowPause,
                 onChanged: (value) {
                   ref.read(localGameProvider.notifier).setAllowPause(value);
                 },
-              ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
+              ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
 
               const SizedBox(height: 16),
 
               // Haptic feedback toggle
               _SettingsToggle(
-                title: 'Haptic Feedback',
-                subtitle: 'Vibrate on card reveal and votes',
+                title: context.l10n.localSettings_hapticFeedback_title,
+                subtitle: context.l10n.localSettings_hapticFeedback_subtitle,
                 value: gameState.settings.hapticFeedback,
                 onChanged: (value) {
                   ref.read(localGameProvider.notifier).setHapticFeedback(value);
                 },
+              ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
+
+              const SizedBox(height: 16),
+
+              // Language selection
+              _SettingsCard(
+                title: context.l10n.localSettings_language_title,
+                value: '',
+                child: DropdownButton<Locale?>(
+                  value: currentLocale,
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  dropdownColor: AppColors.surface,
+                  style: AppTypography.body,
+                  hint: Row(
+                    children: [
+                      Text(getLocaleFlag(null), style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 12),
+                      Text(
+                        context.l10n.localSettings_language_system,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                  items: [
+                    DropdownMenuItem<Locale?>(
+                      value: null,
+                      child: Row(
+                        children: [
+                          Text(getLocaleFlag(null), style: const TextStyle(fontSize: 20)),
+                          const SizedBox(width: 12),
+                          Text(
+                            context.l10n.localSettings_language_system,
+                            style: AppTypography.body,
+                          ),
+                        ],
+                      ),
+                    ),
+                    ...supportedLocales.map((locale) => DropdownMenuItem(
+                      value: locale,
+                      child: Row(
+                        children: [
+                          Text(getLocaleFlag(locale), style: const TextStyle(fontSize: 20)),
+                          const SizedBox(width: 12),
+                          Text(
+                            getLocaleDisplayName(locale),
+                            style: AppTypography.body,
+                          ),
+                        ],
+                      ),
+                    )),
+                  ],
+                  onChanged: (locale) {
+                    ref.read(localeProvider.notifier).setLocale(locale);
+                  },
+                ),
               ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
             ],
           ),

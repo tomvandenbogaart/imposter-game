@@ -9,6 +9,13 @@ class WordPack with _$WordPack {
     required String id,
     required String name,
     @Default('en') String language,
+    @JsonKey(name: 'is_premium') @Default(false) bool isPremium,
+    String? category,
+    @JsonKey(name: 'icon_name') String? iconName,
+    @JsonKey(name: 'sort_order') @Default(0) int sortOrder,
+    @JsonKey(name: 'is_seasonal') @Default(false) bool isSeasonal,
+    @JsonKey(name: 'available_from') DateTime? availableFrom,
+    @JsonKey(name: 'available_until') DateTime? availableUntil,
     @JsonKey(name: 'created_at') DateTime? createdAt,
   }) = _WordPack;
 

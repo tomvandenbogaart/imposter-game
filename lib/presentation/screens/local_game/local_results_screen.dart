@@ -6,28 +6,53 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/models.dart';
 import '../../providers/local_game_provider.dart';
+import '../../providers/ad_provider.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../widgets/buttons/secondary_button.dart';
 import '../../widgets/decorations/party_background.dart';
 
-class LocalResultsScreen extends ConsumerWidget {
+class LocalResultsScreen extends ConsumerStatefulWidget {
   const LocalResultsScreen({super.key});
 
-  Future<void> _goToNextRound(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<LocalResultsScreen> createState() => _LocalResultsScreenState();
+}
+
+class _LocalResultsScreenState extends ConsumerState<LocalResultsScreen> {
+  bool _hasShownAd = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Show interstitial ad when results screen loads (between rounds)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showAdIfNeeded();
+    });
+  }
+
+  Future<void> _showAdIfNeeded() async {
+    if (_hasShownAd) return;
+    _hasShownAd = true;
+
+    final adController = ref.read(adControllerProvider.notifier);
+    await adController.showInterstitialIfNeeded();
+  }
+
+  Future<void> _goToNextRound() async {
     ref.read(localGameProvider.notifier).continueToNextRound();
     final success = await ref.read(localGameProvider.notifier).startRound();
-    if (success && context.mounted) {
+    if (success && mounted) {
       context.go('/local/privacy');
     }
   }
 
-  void _goToFinalResults(BuildContext context, WidgetRef ref) {
+  void _goToFinalResults() {
     ref.read(localGameProvider.notifier).showFinalResults();
     context.go('/local/final-results');
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final gameState = ref.watch(localGameProvider);
     final groupWins = gameState.groupWins;
     final isTie = gameState.isTie;
@@ -276,7 +301,7 @@ class LocalResultsScreen extends ConsumerWidget {
                     PrimaryButton(
                       label: 'See Final Results',
                       icon: Icons.emoji_events_rounded,
-                      onPressed: () => _goToFinalResults(context, ref),
+                      onPressed: _goToFinalResults,
                     ).animate().fadeIn(delay: 900.ms, duration: 400.ms),
                     const SizedBox(height: 12),
                     SecondaryButton(
@@ -291,13 +316,13 @@ class LocalResultsScreen extends ConsumerWidget {
                     PrimaryButton(
                       label: 'Next Round',
                       icon: Icons.arrow_forward_rounded,
-                      onPressed: () => _goToNextRound(context, ref),
+                      onPressed: _goToNextRound,
                     ).animate().fadeIn(delay: 900.ms, duration: 400.ms),
                     const SizedBox(height: 12),
                     SecondaryButton(
                       label: 'End Game Early',
                       icon: Icons.stop_rounded,
-                      onPressed: () => _goToFinalResults(context, ref),
+                      onPressed: _goToFinalResults,
                     ).animate().fadeIn(delay: 1000.ms, duration: 400.ms),
                   ],
                 ],

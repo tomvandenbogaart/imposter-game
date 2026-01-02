@@ -3,7 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../providers/local_game_provider.dart';
@@ -69,7 +71,7 @@ class _LocalDiscussionScreenState extends ConsumerState<LocalDiscussionScreen> {
         backgroundColor: AppColors.background,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(context.screenPadding),
             child: Column(
               children: [
                 // Title
@@ -78,14 +80,14 @@ class _LocalDiscussionScreenState extends ConsumerState<LocalDiscussionScreen> {
                   style: AppTypography.h2,
                 ).animate().fadeIn(duration: 400.ms),
 
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
 
                 Text(
                   'Find the imposter!',
                   style: AppTypography.bodySmall,
                 ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
 
                 // Show who starts the discussion
                 if (_starterPlayerId != null)
@@ -103,7 +105,7 @@ class _LocalDiscussionScreenState extends ConsumerState<LocalDiscussionScreen> {
                           style: AppTypography.h1.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 36,
+                            fontSize: 36.sp,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -126,8 +128,8 @@ class _LocalDiscussionScreenState extends ConsumerState<LocalDiscussionScreen> {
                   children: [
                     TimerArc(
                       progress: timerState.progress,
-                      size: 240,
-                      strokeWidth: 16,
+                      size: context.isTablet ? 300.w : 240.w,
+                      strokeWidth: 16.w,
                       isUrgent: isUrgent,
                     ),
                     Column(
@@ -139,7 +141,7 @@ class _LocalDiscussionScreenState extends ConsumerState<LocalDiscussionScreen> {
                             color: isUrgent ? AppColors.error : AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4.h),
                         // Always reserve space to prevent layout shift
                         Opacity(
                           opacity: timerState.isPaused ? 1.0 : 0.0,
@@ -158,7 +160,7 @@ class _LocalDiscussionScreenState extends ConsumerState<LocalDiscussionScreen> {
                     .fadeIn(delay: 300.ms, duration: 600.ms)
                     .scale(begin: const Offset(0.9, 0.9)),
 
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
 
                 // Pause/Resume button (if enabled)
                 if (gameState.settings.allowPause)
@@ -186,7 +188,7 @@ class _LocalDiscussionScreenState extends ConsumerState<LocalDiscussionScreen> {
                       'Players',
                       style: AppTypography.caption,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     Text(
                       gameState.players.map((p) => p.name).join('  •  '),
                       style: AppTypography.body.copyWith(
@@ -197,7 +199,7 @@ class _LocalDiscussionScreenState extends ConsumerState<LocalDiscussionScreen> {
                   ],
                 ).animate().fadeIn(delay: 700.ms, duration: 400.ms),
 
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
                 // Skip to vote button
                 PrimaryButton(

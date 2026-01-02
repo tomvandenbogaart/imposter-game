@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 
@@ -20,19 +21,19 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 56,
+      height: 56.h,
       decoration: BoxDecoration(
         gradient: onPressed != null
             ? AppColors.primaryGradient
             : null,
         color: onPressed == null ? AppColors.surfaceLight : null,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: onPressed != null
             ? [
                 BoxShadow(
                   color: AppColors.orange.withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  blurRadius: 12.r,
+                  offset: Offset(0, 4.h),
                 ),
               ]
             : null,
@@ -41,15 +42,15 @@ class PrimaryButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: isLoading ? null : onPressed,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           child: Center(
             child: isLoading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
+                ? SizedBox(
+                    width: 24.w,
+                    height: 24.h,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
+                      strokeWidth: 2.w,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
                         AppColors.background,
                       ),
                     ),
@@ -63,8 +64,9 @@ class PrimaryButton extends StatelessWidget {
                           color: onPressed != null
                               ? AppColors.background
                               : AppColors.textMuted,
+                          size: 24.sp,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                       ],
                       Text(
                         label,

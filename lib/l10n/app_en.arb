@@ -1,0 +1,263 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Sus Night",
+  "@appTitle": {
+    "description": "The app title"
+  },
+
+  "welcome_title": "SUS NIGHT",
+  "welcome_subtitle": "Find the sus among you",
+  "welcome_offlineMode_title": "Offline Multiplayer",
+  "welcome_offlineMode_subtitle": "Pass the phone around",
+  "welcome_playOffline_button": "Play Offline",
+  "welcome_onlineMode_title": "Online Multiplayer",
+  "welcome_onlineMode_subtitle": "Play with friends remotely",
+  "welcome_yourName_label": "Your Name",
+  "welcome_yourName_hint": "Enter your display name",
+  "welcome_createRoom_button": "Create Room",
+  "welcome_joinRoom_button": "Join Room",
+  "welcome_or_divider": "OR",
+
+  "localSetup_title": "Local Game",
+  "localSetup_players_header": "Players",
+  "localSetup_playerCount": "{current}/12",
+  "@localSetup_playerCount": {
+    "placeholders": {
+      "current": {"type": "int"}
+    }
+  },
+  "localSetup_addPlayer_button": "Add Player",
+  "localSetup_settings_title": "Settings",
+  "localSetup_settingsSummary": "{rounds} {roundsLabel} · {timer} timer · {packName}",
+  "@localSetup_settingsSummary": {
+    "placeholders": {
+      "rounds": {"type": "int"},
+      "roundsLabel": {"type": "String"},
+      "timer": {"type": "String"},
+      "packName": {"type": "String"}
+    }
+  },
+  "localSetup_startRound_button": "Start Round",
+  "localSetup_defaultPlayerName": "Player {number}",
+  "@localSetup_defaultPlayerName": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "localSetup_roundSingular": "round",
+  "localSetup_roundPlural": "rounds",
+  "localSetup_random": "Random",
+  "localSetup_loading": "Loading...",
+
+  "localSettings_title": "Settings",
+  "localSettings_numberOfRounds": "Number of Rounds",
+  "localSettings_discussionTime": "Discussion Time",
+  "localSettings_wordPack": "Word Pack",
+  "localSettings_selectPack_hint": "Select a pack",
+  "localSettings_randomAllPacks": "Random (All Packs)",
+  "localSettings_revealProtection_title": "Reveal Protection",
+  "localSettings_revealProtection_subtitle": "Require hold to reveal cards",
+  "localSettings_allowPause_title": "Allow Pause",
+  "localSettings_allowPause_subtitle": "Enable pause during discussion",
+  "localSettings_hapticFeedback_title": "Haptic Feedback",
+  "localSettings_hapticFeedback_subtitle": "Vibrate on card reveal and votes",
+  "localSettings_language_title": "Language",
+  "localSettings_language_subtitle": "Choose app language",
+  "localSettings_language_system": "System Default",
+
+  "privacy_vote_label": "Vote",
+  "privacy_player_label": "Player",
+  "privacy_progress": "{current} / {total}",
+  "@privacy_progress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "privacy_passPhoneTo": "Pass the phone to",
+  "privacy_toSeeRole": "to see their role",
+  "privacy_toCastVote": "to cast their vote",
+  "privacy_ensurePrivacy": "Make sure only {playerName} can see the screen",
+  "@privacy_ensurePrivacy": {
+    "placeholders": {
+      "playerName": {"type": "String"}
+    }
+  },
+  "privacy_holdToContinue_button": "Hold to Continue",
+  "privacy_continue_button": "Continue",
+
+  "cardReveal_yourRole": "Your Role",
+  "cardReveal_tapToReveal": "Tap the card to reveal",
+  "cardReveal_tapToReveal_card": "TAP TO REVEAL",
+  "cardReveal_roleAwaits": "Your role awaits",
+  "cardReveal_hideCard_button": "Hide Card",
+  "cardReveal_findImposter": "Find the imposter!",
+  "cardReveal_imposter_title": "IMPOSTER",
+  "cardReveal_yourHint": "Your hint:",
+  "cardReveal_noHint": "No hint",
+  "cardReveal_blendIn": "Blend in! Pretend you know the word.",
+  "cardReveal_unknown": "Unknown",
+
+  "allSet_title": "All Set!",
+  "allSet_subtitle": "All players have seen their cards",
+  "allSet_players_label": "Players",
+  "allSet_timer_label": "Timer",
+  "allSet_imposter_label": "Imposter",
+  "allSet_instruction": "Discuss to find the imposter. The imposter blends in without knowing the word!",
+  "allSet_startDiscussion_button": "Start Discussion",
+
+  "discussion_title": "Discussion",
+  "discussion_findImposter": "Find the imposter!",
+  "discussion_playerStarts": "{playerName} starts!",
+  "@discussion_playerStarts": {
+    "placeholders": {
+      "playerName": {"type": "String"}
+    }
+  },
+  "discussion_paused": "PAUSED",
+  "discussion_pause_button": "Pause",
+  "discussion_resume_button": "Resume",
+  "discussion_players_label": "Players",
+  "discussion_skipToVote_button": "Skip to Vote",
+
+  "voting_title": "{playerName}'s Vote",
+  "@voting_title": {
+    "placeholders": {
+      "playerName": {"type": "String"}
+    }
+  },
+  "voting_whoIsImposter": "Who is the imposter?",
+  "voting_confirmVote_button": "Confirm Vote",
+
+  "results_roundOf": "Round {current} of {total}",
+  "@results_roundOf": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "results_groupWins": "Group Wins!",
+  "results_imposterWins": "Imposter Wins!",
+  "results_voteTied": "The vote was tied!",
+  "results_imposterFound": "The imposter was found!",
+  "results_imposterEscaped": "The imposter escaped!",
+  "results_wasImposter": "was the Imposter",
+  "results_hint": "Hint: {hint}",
+  "@results_hint": {
+    "placeholders": {
+      "hint": {"type": "String"}
+    }
+  },
+  "results_currentStandings": "Current Standings",
+  "results_points": "{points} pts",
+  "@results_points": {
+    "placeholders": {
+      "points": {"type": "int"}
+    }
+  },
+  "results_nextRound_button": "Next Round",
+  "results_endGameEarly_button": "End Game Early",
+  "results_seeFinalResults_button": "See Final Results",
+  "results_playAgain_button": "Play Again",
+
+  "finalResults_winner": "Winner!",
+  "finalResults_tie": "It's a Tie!",
+  "finalResults_gameOver": "Game Over!",
+  "finalResults_noPoints": "No one scored any points!",
+  "finalResults_roundsPlayed": "{count} rounds played",
+  "@finalResults_roundsPlayed": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "finalResults_finalStandings": "Final Standings",
+  "finalResults_playAgain_button": "Play Again",
+  "finalResults_exitToHome_button": "Exit to Home",
+
+  "joinRoom_title": "Join Room",
+  "joinRoom_subtitle": "Enter the room code to join the game",
+  "joinRoom_roomCode_label": "Room Code",
+  "joinRoom_roomCode_hint": "ABC123",
+  "joinRoom_joinGame_button": "Join Game",
+
+  "lobby_title": "Lobby",
+  "lobby_roomCode_label": "Room Code",
+  "lobby_tapToCopy": "Tap to copy",
+  "lobby_host_label": "Host",
+  "lobby_startGame_button": "Start Game",
+  "lobby_needMorePlayers": "Need at least 3 players to start",
+  "lobby_waitingForHost": "Waiting for host to start...",
+
+  "store_title": "Store",
+  "store_unlockPremium": "Unlock Premium Features",
+  "store_supportDevelopment": "Support development and enhance your experience",
+  "store_bestValue": "BEST VALUE",
+  "store_best": "BEST",
+  "store_oneTime": "one-time",
+  "store_purchase_button": "Purchase",
+  "store_owned": "Owned",
+  "store_restorePurchases_button": "Restore Purchases",
+  "store_purchaseSuccessful": "Purchase successful!",
+  "store_purchasesRestored": "{count} purchase(s) restored!",
+  "@store_purchasesRestored": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "store_noRestore": "No purchases to restore",
+  "store_purchaseFailed": "Purchase failed",
+  "store_noProducts": "No products available",
+  "store_failedToLoadProducts": "Failed to load products",
+  "store_failedToLoadStore": "Failed to load store",
+  "store_retry_button": "Retry",
+  "store_whatYouGet": "What you get",
+  "store_adFree": "Ad-free experience",
+  "store_allWordPacks": "All word packs",
+  "store_futurePacks": "Future packs included",
+  "store_supportDev": "Support development",
+  "store_legalApple": "Purchases are processed by Apple App Store. All purchases are one-time payments.",
+  "store_legalGoogle": "Purchases are processed by Google Play. All purchases are one-time payments.",
+
+  "premiumPack_title": "Premium Pack",
+  "premiumPack_message": "This word pack is part of the premium collection. Unlock all packs to access it!",
+  "premiumPack_cancel_button": "Cancel",
+  "premiumPack_viewStore_button": "View Store",
+
+  "error_enterName": "Please enter your name",
+  "error_createRoom": "Error creating room: {error}",
+  "@error_createRoom": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "error_allPlayersNeedName": "All players must have a name",
+  "error_minPlayers": "At least 3 players required",
+  "error_loadWords": "Could not load words. Check your connection.",
+  "error_generic": "Error: {error}",
+  "@error_generic": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "error_roomCodeInvalid": "Please enter a valid 6-character room code",
+  "error_joinRoom": "Error joining room: {error}",
+  "@error_joinRoom": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "error_startGame": "Error starting game: {error}",
+  "@error_startGame": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "error_failedToLoadPacks": "Failed to load packs",
+
+  "snackbar_roomCodeCopied": "Room code copied!",
+
+  "wordPackSelector_title": "Choose Your Theme",
+  "wordPackSelector_viewAll": "View All",
+  "wordPackSelector_random": "Random"
+}

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../providers/local_game_provider.dart';
@@ -68,7 +70,7 @@ class _LocalVotingScreenState extends ConsumerState<LocalVotingScreen> {
         backgroundColor: AppColors.background,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(context.screenPadding),
             child: Column(
               children: [
                 // Header
@@ -77,23 +79,23 @@ class _LocalVotingScreenState extends ConsumerState<LocalVotingScreen> {
                   style: AppTypography.h2,
                 ).animate().fadeIn(duration: 400.ms),
 
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
 
                 Text(
                   'Who is the imposter?',
                   style: AppTypography.bodySmall,
                 ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
 
                 // Voting grid
                 Expanded(
                   child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.85,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: context.votingGridColumns,
+                      crossAxisSpacing: 16.w,
+                      mainAxisSpacing: 16.h,
+                      childAspectRatio: context.isTablet ? 1.0 : 0.85,
                     ),
                     itemCount: votablePlayers.length,
                     itemBuilder: (context, index) {
@@ -112,7 +114,7 @@ class _LocalVotingScreenState extends ConsumerState<LocalVotingScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
                 // Confirm vote button
                 PrimaryButton(
