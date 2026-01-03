@@ -39,99 +39,87 @@ class LocalFinalResultsScreen extends ConsumerWidget {
           trigger: true,
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 children: [
-                  const Spacer(flex: 1),
+                  const SizedBox(height: 8),
 
-                  // Trophy icon
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.celebrationGradient,
-                      borderRadius: BorderRadius.circular(50),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.gold.withValues(alpha: 0.4),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
+                  // Winner header section
+                  Column(
+                    children: [
+                      // Trophy icon
+                      Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.celebrationGradient,
+                          borderRadius: BorderRadius.circular(44),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.gold.withValues(alpha: 0.4),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
+                        child: const Icon(
+                          Icons.emoji_events_rounded,
+                          size: 44,
+                          color: Colors.white,
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(duration: 600.ms)
+                          .scale(
+                            begin: const Offset(0.5, 0.5),
+                            curve: Curves.elasticOut,
+                            duration: 800.ms,
+                          ),
+
+                      const SizedBox(height: 16),
+
+                      // Winner text
+                      Text(
+                        hasAnyPoints
+                            ? (isMultipleWinners ? 'It\'s a Tie!' : 'Winner!')
+                            : 'Game Over!',
+                        style: AppTypography.display.copyWith(
+                          color: AppColors.gold,
+                        ),
+                      ).animate().fadeIn(delay: 300.ms, duration: 600.ms),
+
+                      if (hasAnyPoints && winnerNames.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          winnerNames.join(' & '),
+                          style: AppTypography.h2.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
                       ],
-                    ),
-                    child: const Icon(
-                      Icons.emoji_events_rounded,
-                      size: 48,
-                      color: Colors.white,
-                    ),
-                  )
-                      .animate()
-                      .fadeIn(duration: 600.ms)
-                      .scale(
-                        begin: const Offset(0.5, 0.5),
-                        curve: Curves.elasticOut,
-                        duration: 800.ms,
-                      ),
+
+                      if (!hasAnyPoints) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'No one scored any points!',
+                          style: AppTypography.body.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
+                      ],
+                    ],
+                  ),
 
                   const SizedBox(height: 24),
 
-                  // Winner announcement
-                  Text(
-                    hasAnyPoints
-                        ? (isMultipleWinners ? 'It\'s a Tie!' : 'Winner!')
-                        : 'Game Over!',
-                    style: AppTypography.display.copyWith(
-                      color: AppColors.gold,
-                    ),
-                  ).animate().fadeIn(delay: 300.ms, duration: 600.ms),
-
-                  if (hasAnyPoints && winnerNames.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      winnerNames.join(' & '),
-                      style: AppTypography.h2.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
-                  ],
-
-                  if (!hasAnyPoints) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'No one scored any points!',
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
-                  ],
-
-                  const SizedBox(height: 32),
-
-                  // Game stats
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.surfaceLight),
-                    ),
-                    child: Text(
-                      '${gameState.roundNumber} rounds played',
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
-
-                  const SizedBox(height: 24),
-
-                  // Final Leaderboard
+                  // Final Leaderboard - takes most of the space
                   Expanded(
-                    flex: 3,
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
@@ -144,19 +132,27 @@ class LocalFinalResultsScreen extends ConsumerWidget {
                             children: [
                               const Icon(
                                 Icons.leaderboard_rounded,
-                                color: AppColors.cyan,
-                                size: 24,
+                                color: AppColors.gold,
+                                size: 22,
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 'Final Standings',
                                 style: AppTypography.h3,
                               ),
+                              const Spacer(),
+                              Text(
+                                '${leaderboard.length} players',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           Expanded(
                             child: ListView.builder(
+                              padding: EdgeInsets.zero,
                               itemCount: leaderboard.length,
                               itemBuilder: (context, index) {
                                 final entry = leaderboard[index];
@@ -172,8 +168,8 @@ class LocalFinalResultsScreen extends ConsumerWidget {
                                   score: entry.value,
                                   isWinner: isWinner,
                                 ).animate().fadeIn(
-                                  delay: Duration(milliseconds: 700 + (100 * index)),
-                                  duration: 400.ms,
+                                  delay: Duration(milliseconds: 700 + (50 * index)),
+                                  duration: 300.ms,
                                 );
                               },
                             ),
@@ -183,9 +179,9 @@ class LocalFinalResultsScreen extends ConsumerWidget {
                     ).animate().fadeIn(delay: 650.ms, duration: 400.ms),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
-                  // Action buttons
+                  // Action buttons - more compact
                   PrimaryButton(
                     label: 'Play Again',
                     icon: Icons.replay_rounded,
@@ -195,7 +191,7 @@ class LocalFinalResultsScreen extends ConsumerWidget {
                     },
                   ).animate().fadeIn(delay: 1100.ms, duration: 400.ms),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   SecondaryButton(
                     label: 'Exit to Home',
@@ -206,7 +202,7 @@ class LocalFinalResultsScreen extends ConsumerWidget {
                     },
                   ).animate().fadeIn(delay: 1200.ms, duration: 400.ms),
 
-                  const Spacer(flex: 1),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -246,11 +242,11 @@ class _LeaderboardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: isWinner ? AppColors.gold.withValues(alpha: 0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isWinner ? AppColors.gold : AppColors.surfaceLight,
           width: isWinner ? 2 : 1,
@@ -260,43 +256,48 @@ class _LeaderboardRow extends StatelessWidget {
         children: [
           // Rank badge
           Container(
-            width: 32,
-            height: 32,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               color: _getRankColor(),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
               child: Text(
                 '$rank',
-                style: AppTypography.buttonSmall.copyWith(
+                style: AppTypography.bodySmall.copyWith(
                   color: rank <= 3 ? Colors.white : AppColors.textMuted,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           // Player name
           Expanded(
             child: Text(
               playerName,
-              style: AppTypography.playerName.copyWith(
+              style: AppTypography.body.copyWith(
                 color: isWinner ? AppColors.gold : AppColors.textPrimary,
+                fontWeight: isWinner ? FontWeight.w600 : FontWeight.normal,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           // Score
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: isWinner
+                  ? AppColors.gold.withValues(alpha: 0.2)
+                  : AppColors.cyan.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               '$score pts',
-              style: AppTypography.body.copyWith(
-                color: AppColors.cyan,
+              style: AppTypography.bodySmall.copyWith(
+                color: isWinner ? AppColors.gold : AppColors.cyan,
                 fontWeight: FontWeight.w600,
               ),
             ),

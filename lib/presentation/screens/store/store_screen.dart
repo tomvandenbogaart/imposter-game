@@ -109,21 +109,23 @@ class StoreScreen extends ConsumerWidget {
             final product = entry.value;
             final isBundle = product.id == 'packs_no_ads';
             final isOwned = _isProductOwned(product.id, hasNoAds, hasAllPacks);
-            final isLoading = purchaseState.status == AppPurchaseStatus.loading ||
+            final isLoading =
+                purchaseState.status == AppPurchaseStatus.loading ||
                 purchaseState.status == AppPurchaseStatus.purchasing ||
                 purchaseState.status == AppPurchaseStatus.verifying;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: _ProductCard(
-                product: product,
-                isBundle: isBundle,
-                isOwned: isOwned,
-                isLoading: isLoading,
-                onPurchase: () => ref
-                    .read(purchaseNotifierProvider.notifier)
-                    .purchase(product),
-              ).animate().fadeIn(
+              child:
+                  _ProductCard(
+                    product: product,
+                    isBundle: isBundle,
+                    isOwned: isOwned,
+                    isLoading: isLoading,
+                    onPurchase: () => ref
+                        .read(purchaseNotifierProvider.notifier)
+                        .purchase(product),
+                  ).animate().fadeIn(
                     delay: Duration(milliseconds: 200 + (index * 100)),
                     duration: 400.ms,
                   ),
@@ -133,25 +135,25 @@ class StoreScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Comparison table
-          _buildComparisonTable(hasNoAds, hasAllPacks)
-              .animate()
-              .fadeIn(delay: 500.ms, duration: 400.ms),
+          _buildComparisonTable(
+            hasNoAds,
+            hasAllPacks,
+          ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
 
           const SizedBox(height: 24),
 
           // Restore purchases button
           _RestoreButton(
             isLoading: purchaseState.status == AppPurchaseStatus.loading,
-            onPressed: () => ref
-                .read(purchaseNotifierProvider.notifier)
-                .restorePurchases(),
+            onPressed: () =>
+                ref.read(purchaseNotifierProvider.notifier).restorePurchases(),
           ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
 
           const SizedBox(height: 24),
 
           // Legal text
           Text(
-            'Purchases are processed by ${_storeName}. '
+            'Purchases are processed by $_storeName. '
             'All purchases are one-time payments.',
             style: AppTypography.caption,
             textAlign: TextAlign.center,
@@ -229,9 +231,7 @@ class StoreScreen extends ConsumerWidget {
         children: [
           Icon(icon, color: color),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(message, style: AppTypography.bodySmall),
-          ),
+          Expanded(child: Text(message, style: AppTypography.bodySmall)),
         ],
       ),
     );
@@ -346,8 +346,9 @@ class _ProductCard extends StatelessWidget {
                       Text(
                         product.title,
                         style: AppTypography.h3.copyWith(
-                          color:
-                              isBundle ? Colors.white : AppColors.textPrimary,
+                          color: isBundle
+                              ? Colors.white
+                              : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -397,8 +398,10 @@ class _ProductCard extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.check_circle,
-                              color: AppColors.success),
+                          const Icon(
+                            Icons.check_circle,
+                            color: AppColors.success,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Owned',
@@ -412,18 +415,19 @@ class _ProductCard extends StatelessWidget {
                   : ElevatedButton(
                       onPressed: isLoading ? null : onPurchase,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            isBundle ? Colors.white : AppColors.orange,
-                        foregroundColor:
-                            isBundle ? AppColors.background : Colors.white,
+                        backgroundColor: isBundle
+                            ? Colors.white
+                            : AppColors.orange,
+                        foregroundColor: isBundle
+                            ? AppColors.background
+                            : Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        disabledBackgroundColor: (isBundle
-                                ? Colors.white
-                                : AppColors.orange)
-                            .withOpacity(0.5),
+                        disabledBackgroundColor:
+                            (isBundle ? Colors.white : AppColors.orange)
+                                .withOpacity(0.5),
                       ),
                       child: isLoading
                           ? const SizedBox(
@@ -487,10 +491,7 @@ class _RestoreButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onPressed;
 
-  const _RestoreButton({
-    required this.isLoading,
-    required this.onPressed,
-  });
+  const _RestoreButton({required this.isLoading, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
